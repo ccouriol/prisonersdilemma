@@ -3,6 +3,9 @@
 # 'make clean'  removes all .o and executable files
 #
 
+# define the documentation program to use
+DOCC = doxygen
+
 # define the C compiler to use
 CC = gcc
 
@@ -13,6 +16,9 @@ CFLAGS	:= -Wall -Wextra -g
 #   if I wanted to include libraries not in /usr/lib I'd specify
 #   their path using -Lpath, something like:
 LFLAGS =
+
+# define docs directory
+DOCS	:= docs
 
 # define output directory
 OUTPUT	:= output
@@ -41,6 +47,7 @@ INCLUDEDIRS	:= $(shell find $(INCLUDE) -type d)
 LIBDIRS		:= $(shell find $(LIB) -type d)
 FIXPATH = $1
 RM = rm -f
+RMD = rm -rf
 MD	:= mkdir -p
 endif
 
@@ -83,9 +90,13 @@ $(MAIN): $(OBJECTS)
 .PHONY: clean
 clean:
 	$(RM) $(OUTPUTMAIN)
+	$(RMD) $(DOCS)
 	$(RM) $(call FIXPATH,$(OBJECTS))
 	@echo Cleanup complete!
 
 run: all
 	./$(OUTPUTMAIN)
 	@echo Executing 'run: all' complete!
+
+doc:
+	$(DOCC) dconfig
