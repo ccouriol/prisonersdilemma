@@ -121,14 +121,14 @@ void on_cancel()
 	unsigned int pressed = gtk_dialog_run(GTK_DIALOG(message_dialog));
 	if (pressed == GTK_RESPONSE_OK)
 	{
-		printf("OK Pressed \n");
-		printf("quitting\n ");
+		puts("OK Pressed");
+		puts("quitting");
 		gtk_widget_destroy(message_dialog);
 		gtk_main_quit();
 	}
 	else
 	{
-		printf("CANCEL Pressed \n");
+		puts("CANCEL Pressed");
 		gtk_widget_destroy(message_dialog);
 	}
 }
