@@ -1,47 +1,68 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/*!
+* \file main.c
+* \author Clément Couriol
+* \version 0.1
+* \date 17/11/2021
+* \brief 
+* \remarks None
+* 
+* 
+* 
+*/
 
-/* 
- * File:   main.c
- * Author: aurelio
- *
- */
-
+/*! Importation of librairies*/
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <gtk/gtk.h>
+// #include <glib-2.0/glib.h>
+// #include <gtk-3.0/gtk/gtk.h>
 
 GtkBuilder *builder = NULL;
 
 int timer_id = 0;
 int elapsed_time = 0;
 
-/**
- * Fermeture de la fenetre
- * cette fonction est invoke par le gestionnaire d'evt
- */
+/*!
+* \fn void on_window_main_destroy()
+* \author Clément Couriol
+* \version 0.1
+* \date  17/11/2021
+* \brief Close window (invoked by the event anager)
+* \remarks None
+*/
 void on_window_main_destroy()
 {
-	printf("quitting\n ");
+	puts("Quitting");
 	gtk_main_quit();
 }
 
-/**
- * Fonction invoque lors du click sur le bouton 'Yes'
- */
+/*!
+* \fn void on_button_click()
+* \author Clément Couriol
+* \version 0.1
+* \date  17/11/2021
+* \brief Function called when button "Yes" is clicked
+* \remarks None
+*/
 void on_button_click()
 {
-	printf("bouton 'Yes' clicked\n");
+	puts("Button 'Yes' clicked\n");
 	GtkEntry *texte = GTK_ENTRY(gtk_builder_get_object(builder, "texte"));
 	gchar *data = (gchar *)gtk_entry_get_text(texte);
 	GtkEntry *echo = GTK_ENTRY(gtk_builder_get_object(builder, "echo"));
 	gtk_entry_set_text(echo, data);
 }
 
+/*!
+* \fn int timer_handler()
+* \author Clément Couriol
+* \version 0.1
+* \date  17/11/2021
+* \brief 
+* \remarks None
+* \return 
+*/
 int timer_handler()
 {
 	elapsed_time++;
@@ -53,11 +74,16 @@ int timer_handler()
 	return 1;
 }
 
-/**
- * Gestion du bouton toggle_one avec demarrage/arret d'un timer
- * @param widget  le widget qui a emit l'evt
- * @param data des donnees supplementatire
- */
+/*!
+* \fn void on_toogle(GtkWidget *widget, gpointer data)
+* \author Clément Couriol
+* \version 0.1
+* \date  17/11/2021
+* \brief Management of toggle_one button with stop/start of a timer
+* \remarks None
+* \param widget (who emmited the event)
+* \param data (additional information)
+*/
 void on_toogle(GtkWidget *widget, gpointer data)
 {
 	GtkToggleButton *btn = GTK_TOGGLE_BUTTON(widget);
@@ -76,6 +102,14 @@ void on_toogle(GtkWidget *widget, gpointer data)
 	}
 }
 
+/*!
+* \fn void on_cancel()
+* \author Clément Couriol
+* \version 0.1
+* \date  17/11/2021
+* \brief 
+* \remarks None
+*/
 void on_cancel()
 {
 	GtkWidget *message_dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL,
@@ -99,9 +133,17 @@ void on_cancel()
 	}
 }
 
-/*
- * 
- */
+/*!
+* \fn int main(int argc, char **argv)
+* \author Clément Couriol
+* \version 0.1
+* \date 17/11/2021
+* \brief Main function of the program
+* \remarks None
+* \param argc number of arguments given as inputs
+* \param argv value of arguments given as inputs
+* \return 0 if all went good
+*/
 int main(int argc, char **argv)
 {
 	GtkWidget *win;
