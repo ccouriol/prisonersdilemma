@@ -20,7 +20,7 @@
 
 GtkBuilder *builder = NULL;
 
-int timer_id = 0;
+unsigned int timer_id = 0;
 int elapsed_time = 0;
 
 /*!
@@ -118,7 +118,7 @@ void on_cancel()
                                                      "This action will cause the universe to stop existing.");
   //cf : http://refspecs.linuxbase.org/gtk/2.6/gtk/GtkMessageDialog.html
   //https://developer.gnome.org/gnome-devel-demos/stable/messagedialog.c.html.en
-  unsigned int pressed = gtk_dialog_run(GTK_DIALOG(message_dialog));
+  int pressed = gtk_dialog_run(GTK_DIALOG(message_dialog));
   if (pressed == GTK_RESPONSE_OK)
   {
     puts("OK Pressed");
