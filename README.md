@@ -3,7 +3,7 @@
 ## Build requirements
 
 ```bash
-apt install build-essential doxygen graphviz lib libgtk-3-dev
+apt install build-essential doxygen graphviz libgtk-3-dev
 ```
 
 ## Build & run
@@ -25,3 +25,17 @@ make doc
 ### To clean the docs and program
 make clean
 ```
+
+## Mockup
+
+[Excalidraw mockup](https://excalidraw.com/#json=s0DXZXyjgY25yq5YDQ9gv,wePrsjqY_j_UPpj-NZa47A)
+
+![excalidraw preview](./template/Untitled-2021-11-15-1958.png)
+
+## Todo
+
+- [ ] Server config
+- [ ] Client config
+- [ ] Explain prisoner's dilmena
+- [ ] Explain context
+- [ ] Build depedencies for config files
