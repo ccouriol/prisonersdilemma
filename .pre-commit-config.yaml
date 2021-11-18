@@ -1,0 +1,16 @@
+fail_fast: false
+repos:
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.4
+    hooks:
+      - id: clang-format
+        args: [--style=llvm, -i]
+      # - id: clang-tidy
+      # - id: uncrustify
+      # - id: cppcheck
+      # - id: cpplint
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v2.20.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
