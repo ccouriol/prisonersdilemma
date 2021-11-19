@@ -35,7 +35,7 @@ make clean
 ## Dev requirements
 
 ```bash
-apt install clang clang-tidy clang-format python3 python3-pip
+apt install clang clang-tidy clang-format python3 python3-pip cppcheck valgrind libconfig-dev
 pip3 install pre-commit
 PATH="$PATH:$HOME/.local/bin"
 pre-commit install --hook-type commit-msg
@@ -72,10 +72,53 @@ pre-commit run
   "workbench.editor.wrapTabs": true,
 ```
 
+## Dev hints
+
+1. `ctrl shift p` > generate comments
+2. Fill author, brief and remarks (optionnal)
+3. `cppcheck --error-exitcode=1 --enable=all --suppress=unmatchedSuppression . 2> cppcheck.log`
+4. `sudo valgrind --tool=memcheck --leak-check=summary --leak-resolution=high --show-reachable=yes ./output/main 2> valgrind.log`
+5. commitizen commits, and stage clang format modification
+6. `git push`
+7. `git fetch --all`
+8. `git pull --all` (ou checkout sur main git pull git merge la branche)
+
+## Prisoner dilemna context
+
+> The prisoner's dilemma is a standard example of a game analyzed in game theory that shows why two completely rational individuals might not cooperate, even if it appears that it is in their best interests to do so. It was originally framed by Merrill Flood and Melvin Dresher while working at RAND in 1950. Albert W. Tucker formalized the game with prison sentence rewards and named it "prisoner's dilemma",[1] presenting it as follows:
+
+[Wikipedia](https://www.wikiwand.com/en/Prisoner%27s_dilemma)
+
 ## Todo
 
-- [ ] Server config
-- [ ] Client config
-- [ ] Explain prisoner's dilmena
+- [ ] Server config example
+- [ ] Client config example
+- [x] Explain prisoner's dilmena
 - [ ] Explain context
-- [ ] Build depedencies for config files
+- [x] Build depedencies for config files
+- [x] implement valgrind
+- [ ] change makefile to build a server executable and client executable
+
+## Subject
+
+### Tips
+
+- Respecting the conditions of contract
+- Manage your time well
+- Have a good discussion in your team
+- Think before you program
+- Structure your source code to make it as scalable as possible
+- Use assertions
+- Formalize the protocol well (do simulations between you)
+- Think about the possible evolutions of the project: for example the state of the server and the clients could be supervised from a supervision station
+
+### Oral
+
+4 Pages + 2 Annexes max
+
+- The organization of the work in the group
+- The methodology used in the development
+- The justification of certain choices and the evaluation of the relevance afterwards
+- The current status of the project and what remains to be done
+- The difficulties encountered
+- A quick assessment of what this project has brought you
