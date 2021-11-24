@@ -23,6 +23,25 @@ typedef struct {
   int index;
 } connection_t;
 
+// client envoie choix, mise et pactole
+//serveur envoie Nouveau Pactole
+typedef struct {
+  int idClient;
+  bool choix;
+  int sommePariée;
+  int pactole
+
+} structureClient;
+
+typedef struct{
+  int idPartie;
+  int c1NbTrahison;
+  int c1NbCollab;
+    int c2NbTrahison;
+  int c2NbCollab;
+  structureClient client;
+}
+
 void init_sockets_array();
 void add(connection_t *connection);
 void del(connection_t *connection);
