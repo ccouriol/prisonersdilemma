@@ -12,17 +12,25 @@ apt install build-essential doxygen graphviz libgtk-3-dev
 git clone https://github.com/ccouriol/prisonersdilemma.git
 cd prisonersdilemma/
 
-### To compile and run the program :
-make run
+### To compile and run the client :
+make client
+make runclient
 
-### To compile the program and run manually :
-make && ./output/main
+### To compile and run the server :
+make server
+make runserver
+
+### To clean the client
+make cleanclient
+
+### To clean the server
+make cleanserver
 
 ### To compile and build the documentation
 make doc
 ./docs/html/index.html
 
-### To clean the docs and program
+### To clean the docs
 make clean
 ```
 
