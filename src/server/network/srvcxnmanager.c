@@ -1,13 +1,3 @@
-
-#include <arpa/inet.h>
-#include <pthread.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
 #include "srvcxnmanager.h"
 
 connection_t *connections[MAXSIMULTANEOUSCLIENTS];
@@ -151,11 +141,29 @@ int create_server_socket() {
   return sockfd;
 }
 
+/**
+ * @brief Search for an available client
+ *
+ * @return int the position of an available client
+ */
+int verifyNbClients() {
+  int ret = -10;
+
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    if ((connections[i] != NULL) && (connections[i]->client.isInGame == true)) {
+      ret = i;
+      return ret; // return the index of an available client
+    }
+  }
+  return ret;
+  // otherwise return a negative number because there is no other clients
+}
+
 void *threadServeur(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
 
-  int len, indexClient;
+  int len, clientIndex = -90;
   connection_t *connection;
   if (!ptr)
     pthread_exit(0);
@@ -169,7 +177,10 @@ void *threadServeur(void *ptr) {
   sprintf(buffer_out, "Welcome #%i\n", connection->index);
   write(connection->sockfd, buffer_out, sizeof(buffer_out));
 
-  // verifier le nb de clients avant de lancer
+  // Verification of the number of clients available
+  while (clientIndex < 0) {
+    clientIndex = verifyNbClients();
+  }
 
   // tant que le client ne ferme pas la connexion
   while ((len = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
@@ -200,14 +211,4 @@ void calculgains() {
 void ecritureResultats(/*struct machin*/) {
   // ici, mutex+ écriture fichier, mutex car potentiellement concurrent.
   // appelée à la fin de la partie avant la fermeture du thread.
-}
-
-int verifyNbClients(connection_t *connection, structureClient *client) {
-  int ret = -10; // if 0 other clients, then return a negative number
-
-  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-    if (connections[i] != NULL) {
-      // if (connections[i].
-    }
-  }
 }

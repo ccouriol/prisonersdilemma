@@ -10,6 +10,15 @@
  *
  */
 
+#include <arpa/inet.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
 #ifndef SRVCXNMANAGER_H
 #define SRVCXNMANAGER_H
 
@@ -47,6 +56,7 @@ void init_sockets_array();
 void add(connection_t *connection);
 void del(connection_t *connection);
 void *threadProcess(void *ptr);
+int verifyNbClients();
 int create_server_socket();
 
 #endif /* SRVCXNMANAGER_H */
