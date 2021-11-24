@@ -10,7 +10,7 @@
  *
  */
 
-#include <stdbool.h>
+
 #ifndef SRVCXNMANAGER_H
 #define SRVCXNMANAGER_H
 
@@ -27,21 +27,22 @@ typedef struct {
 
 // client envoie choix, mise et pactole
 //serveur envoie Nouveau Pactole
-typedef struct {
+typedef struct structureClient{
+  bool isInGame;
   int idClient;
   bool choix;
   int sommePariée;
   int pactole;
 } structureClient;
 
-typedef struct{
+typedef struct structureClient{
   int idPartie;
   int c1NbTrahison;
   int c1NbCollab;
-    int c2NbTrahison;
+  int c2NbTrahison;
   int c2NbCollab;
-  structureClient client;
-} structurePartie;
+  struct structureClient client;
+} instanceJeu;
 
 void init_sockets_array();
 void add(connection_t *connection);
