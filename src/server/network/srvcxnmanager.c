@@ -1,4 +1,5 @@
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,7 +20,8 @@ void init_sockets_array() {
 }
 
 void add(connection_t *connection) {
-  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+  int i;
+  for (i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (connections[i] == NULL) {
       connections[i] = connection;
       return;
@@ -148,4 +150,65 @@ int create_server_socket() {
   }
 
   return sockfd;
+}
+
+void *threadServeur(void *ptr) {
+  char buffer_in[BUFFERSIZE];
+  char buffer_out[BUFFERSIZE];
+
+  int len, indexClient;
+  connection_t *connection;
+  if (!ptr)
+    pthread_exit(0);
+  connection = (connection_t *)ptr;
+  printf("New incoming connection \n");
+
+  add(connection);
+
+  // message de début de connection, peut etre envoyer num client ?
+  printf("Welcome #%i\n", connection->index);
+  sprintf(buffer_out, "Welcome #%i\n", connection->index);
+  write(connection->sockfd, buffer_out, sizeof(buffer_out));
+
+  // verifier le nb de clients avant de lancer
+
+  // tant que le client ne ferme pas la connexion
+  while ((len = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
+
+    if (strncmp(buffer_in, "bye", 3) == 0) {
+      break;
+    }
+    // réception données
+    // puis traitement et renvoi
+  }
+
+  // ecriture sur fichier avant fermeture
+  close(connection->sockfd);
+  del(connection);
+  free(connection);
+  pthread_exit(0);
+}
+
+void calculgains() {
+  // calcule les gains et les renvois
+  // N'est pas chargée de les envoyer sur le socket
+  // prends en entrée une structure
+  // P-E choper les choix dans la sous structure, et les placer dans la
+  // structure mere ? pour ensuite renvoyer les choix au bon client cf numero de
+  // partie pour vérifier les clients
+}
+
+void ecritureResultats(/*struct machin*/) {
+  // ici, mutex+ écriture fichier, mutex car potentiellement concurrent.
+  // appelée à la fin de la partie avant la fermeture du thread.
+}
+
+int verifyNbClients(connection_t *connection, structureClient *client) {
+  int ret = -10; // if 0 other clients, then return a negative number
+
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    if (connections[i] != NULL) {
+      // if (connections[i].
+    }
+  }
 }

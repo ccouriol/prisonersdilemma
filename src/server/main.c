@@ -14,20 +14,18 @@
 
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <stdbool.h>
-
-int main(int argc, char *argv[]) {}
+#include "network/srvcxnmanager.h"
 
 /*
  * File:   main.c
  * Author: aurelio
  *
  */
-
-#include "./network/srvcxnmanager.h"
 
 int main(int argc, char **argv) {
   int sockfd = -1;
@@ -45,8 +43,6 @@ int main(int argc, char **argv) {
     fprintf(stderr, "%s: error: cannot listen on port\n", argv[0]);
     return -5;
   }
-
-  printf("ready and listening\n");
 
   // Wait for connection
   while (true) {
