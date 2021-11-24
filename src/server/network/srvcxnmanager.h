@@ -10,11 +10,13 @@
  *
  */
 
+#include <stdbool.h>
 #ifndef SRVCXNMANAGER_H
 #define SRVCXNMANAGER_H
 
 #define BUFFERSIZE 2048
 #define MAXSIMULTANEOUSCLIENTS 100
+
 
 typedef struct {
   int sockfd;
@@ -29,8 +31,7 @@ typedef struct {
   int idClient;
   bool choix;
   int sommePariée;
-  int pactole
-
+  int pactole;
 } structureClient;
 
 typedef struct{
@@ -40,7 +41,7 @@ typedef struct{
     int c2NbTrahison;
   int c2NbCollab;
   structureClient client;
-}
+} structurePartie;
 
 void init_sockets_array();
 void add(connection_t *connection);
