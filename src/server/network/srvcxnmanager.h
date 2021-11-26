@@ -27,36 +27,38 @@
 
 // client envoie choix, mise et pactole
 // serveur envoie Nouveau Pactole
-typedef struct structureClient {
+typedef struct clientStructure {
   bool isInGame;
   int idClient;
   bool choix;
   int sommePariée;
   int pactole;
-} structureClient;
+} clientStructure;
 
 typedef struct {
   int sockfd;
   struct sockaddr address;
   int addr_len;
   int index;
-  struct structureClient client;
+  struct clientStructure client;
 } connection_t;
 
-typedef struct structureJeu {
+typedef struct gameStructure {
   int idPartie;
   int c1NbTrahison;
   int c1NbCollab;
   int c2NbTrahison;
   int c2NbCollab;
-  structureClient *client;
-} structureJeu;
+  clientStructure *client1;
+  clientStructure *client2;
+} gameStructure;
 
 void init_sockets_array();
 void add(connection_t *connection);
 void del(connection_t *connection);
 void *threadProcess(void *ptr);
-int verifyNbClients();
+clientStructure *verifyNbClients(int clientID);
+
 int create_server_socket();
 
 #endif /* SRVCXNMANAGER_H */

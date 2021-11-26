@@ -1,6 +1,7 @@
 #include "srvcxnmanager.h"
 
 connection_t *connections[MAXSIMULTANEOUSCLIENTS];
+gameStructure *games[MAXSIMULTANEOUSCLIENTS];
 
 void init_sockets_array() {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
@@ -9,8 +10,7 @@ void init_sockets_array() {
 }
 
 void add(connection_t *connection) {
-  int i;
-  for (i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (connections[i] == NULL) {
       connections[i] = connection;
       return;
@@ -146,24 +146,27 @@ int create_server_socket() {
  *
  * @return int the position of an available client
  */
-int verifyNbClients() {
-  int ret = -10;
+clientStructure *verifyNbClients(int clientID) {
+  clientStructure *ret = NULL;
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-    if ((connections[i] != NULL) && (connections[i]->client.isInGame == true)) {
-      ret = i;
+    if ((connections[i] != NULL) &&
+        (connections[i]->client.idClient != clientID) &&
+        (connections[i]->client.isInGame == true)) {
+      ret = (&(connections[i]->client));
       return ret; // return the index of an available client
     }
   }
   return ret;
-  // otherwise return a negative number because there is no other clients
+  // otherwise return NULL because there is no other clients
 }
 
 void *threadServeur(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
 
-  int len, clientIndex = -90;
+  int lenMsgIn;
+  clientStructure *clientAddr = NULL;
   connection_t *connection;
   if (!ptr)
     pthread_exit(0);
@@ -171,19 +174,20 @@ void *threadServeur(void *ptr) {
   printf("New incoming connection \n");
 
   add(connection);
+  connection->client.idClient = connection->index;
 
   // message de début de connection, peut etre envoyer num client ?
   printf("Welcome #%i\n", connection->index);
   sprintf(buffer_out, "Welcome #%i\n", connection->index);
   write(connection->sockfd, buffer_out, sizeof(buffer_out));
 
-  // Verification of the number of clients available
-  while (clientIndex < 0) {
-    clientIndex = verifyNbClients();
+  // Verification of the number of clients available, minus this client's ID
+  while (clientAddr == NULL && !(connection->client.isInGame)) {
+    clientAddr = verifyNbClients(connection->client.idClient);
   }
 
   // tant que le client ne ferme pas la connexion
-  while ((len = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
+  while ((lenMsgIn = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
 
     if (strncmp(buffer_in, "bye", 3) == 0) {
       break;
@@ -197,6 +201,16 @@ void *threadServeur(void *ptr) {
   del(connection);
   free(connection);
   pthread_exit(0);
+}
+
+int initGame(clientStructure *client1, clientStructure *client2) {
+
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    if (games[i] == NULL) {
+      games[i]->client1 = client1;
+      games[i]->client2 = client2;
+    }
+  }
 }
 
 void calculgains() {
