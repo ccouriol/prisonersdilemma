@@ -193,7 +193,9 @@ void *threadServeur(void *ptr) {
       break;
     }
     // réception données
+    
     // puis traitement et renvoi
+    calculgains();
   }
 
   // ecriture sur fichier avant fermeture
@@ -214,6 +216,31 @@ int initGame(clientStructure *client1, clientStructure *client2) {
 }
 
 void calculgains() {
+  for (int i=0; i<MAXSIMULTANEOUSCLIENTS; i++){
+    //On retire les sommes pariées des pactoles
+    games[i]->client1->pactole-=games[i]->client1->sommePariée;
+    games[i]->client2->pactole-=games[i]->client2->sommePariée;
+    //Si les deux joueurs trahissent...
+    if (games[i]->client1->choix==1 && games[i]->client2->choix==1){     
+      games[i]->client1->pactole+=games[i]->client1->sommePariée/2;    
+      games[i]->client2->pactole+=games[i]->client2->sommePariée/2;
+    }  
+    //Si le joueur 1 trahit le joueur 2...
+    else if (games[i]->client1->choix==1 && games[i]->client2->choix==0){
+      games[i]->client1->pactole+=games[i]->client2->sommePariée; 
+    }
+    //Si le joueur 2 trahit le joueur 1...
+    else if (games[i]->client1->choix==0 && games[i]->client2->choix==1){
+      games[i]->client2->pactole+=games[i]->client1->sommePariée; 
+    }
+    //Si les deux joueurs collaborent...
+    else {
+      games[i]->client1->pactole+=games[i]->client1->sommePariée;    
+      games[i]->client2->pactole+=games[i]->client2->sommePariée;
+    }   
+  }
+  perror("Too much simultaneous connections");
+  exit(-5);
   // calcule les gains et les renvois
   // N'est pas chargée de les envoyer sur le socket
   // prends en entrée une structure
