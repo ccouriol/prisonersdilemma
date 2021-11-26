@@ -200,6 +200,7 @@ void *threadServeur(void *ptr) {
   clientStructure *clientAddr;
   gameStructure *iDGame = NULL;
   connection_t *connection;
+  roundStructure *AEnvoyer;
 
   if (!ptr)
     pthread_exit(0);
@@ -213,6 +214,9 @@ void *threadServeur(void *ptr) {
   printf("Welcome #%i\n", connection->client.idClient);
   // sprintf(buffer_out, "Welcome #%i\n", connection->client.idClient);
   write(connection->sockfd, buffer_out, sizeof(buffer_out));
+  //BALANCER LA STRUCTURE DANS LE SOCKET SANS BUFFER
+  //RECUP = RECUPERER AVEC BUFFER_OUT EN CHAR
+  //PUIS PASSER DANS UNE VARIABLE DE TYPE STRUCTURE.
 
   // Verification of the number of clients available, minus this client's ID
   // and creation of the game if there is enough clients
