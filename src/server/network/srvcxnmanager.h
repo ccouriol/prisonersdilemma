@@ -75,6 +75,7 @@ void del(connection_t *connection);
 void *threadProcess(void *ptr);
 gameStructure *initGame(clientStructure *client1, clientStructure *client2);
 clientStructure *verifyNbClients(int clientID);
+void *threadServeur(void *ptr);
 
 int create_server_socket();
 
