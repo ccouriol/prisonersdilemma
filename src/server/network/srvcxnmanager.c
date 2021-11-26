@@ -220,7 +220,6 @@ void *threadServeur(void *ptr) {
     // réception données
 
     // puis traitement et renvoi
-    calculgains();
   }
 
   // ecriture sur fichier avant fermeture
@@ -232,32 +231,36 @@ void *threadServeur(void *ptr) {
   pthread_exit(0);
 }
 
-void calculgains() {
-  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-    // On retire les sommes pariées des pactoles
-    games[i]->client1->pactole -= games[i]->client1->sommePariée;
-    games[i]->client2->pactole -= games[i]->client2->sommePariée;
-    // Si les deux joueurs trahissent...
-    if (games[i]->client1->choix == 1 && games[i]->client2->choix == 1) {
-      games[i]->client1->pactole += games[i]->client1->sommePariée / 2;
-      games[i]->client2->pactole += games[i]->client2->sommePariée / 2;
-    }
-    // Si le joueur 1 trahit le joueur 2...
-    else if (games[i]->client1->choix == 1 && games[i]->client2->choix == 0) {
-      games[i]->client1->pactole += games[i]->client2->sommePariée;
-    }
-    // Si le joueur 2 trahit le joueur 1...
-    else if (games[i]->client1->choix == 0 && games[i]->client2->choix == 1) {
-      games[i]->client2->pactole += games[i]->client1->sommePariée;
-    }
-    // Si les deux joueurs collaborent...
-    else {
-      games[i]->client1->pactole += games[i]->client1->sommePariée;
-      games[i]->client2->pactole += games[i]->client2->sommePariée;
-    }
+void calculgains(gameStructure *iDGame) {
+  // On retire les sommes pariées des pactoles
+  iDGame->client1->pactole -= iDGame->client1->sommePariée;
+  iDGame->client2->pactole -= iDGame->client2->sommePariée;
+  // Si les deux joueurs trahissent...
+  if (iDGame->client1->choix == 1 && iDGame->client2->choix == 1) {
+    iDGame->client1->pactole += iDGame->client1->sommePariée / 2;
+    iDGame->client2->pactole += iDGame->client2->sommePariée / 2;
+    iDGame->c1NbTrahison += 1;
+    iDGame->c2NbTrahison += 1;
   }
-  perror("Too much simultaneous connections");
-  exit(-5);
+  // Si le joueur 1 trahit le joueur 2...
+  else if (iDGame->client1->choix == 1 && iDGame->client2->choix == 0) {
+    iDGame->client1->pactole += iDGame->client2->sommePariée;
+    iDGame->c1NbTrahison += 1;
+    iDGame->c2NbCollab += 1;
+  }
+  // Si le joueur 2 trahit le joueur 1...
+  else if (iDGame->client1->choix == 0 && iDGame->client2->choix == 1) {
+    iDGame->client2->pactole += iDGame->client1->sommePariée;
+    iDGame->c1NbCollab += 1;
+    iDGame->c2NbTrahison += 1;
+  }
+  // Si les deux joueurs collaborent...
+  else {
+    iDGame->client1->pactole += iDGame->client1->sommePariée;
+    iDGame->client2->pactole += iDGame->client2->sommePariée;
+    iDGame->c1NbCollab += 1;
+    iDGame->c2NbCollab += 1;
+  }
   // calcule les gains et les renvois
   // N'est pas chargée de les envoyer sur le socket
   // prends en entrée une structure
