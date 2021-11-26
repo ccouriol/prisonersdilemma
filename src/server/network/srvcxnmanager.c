@@ -165,8 +165,7 @@ clientStructure *verifyNbClients(int clientID) {
       return ret; // return the index of an available client
     }
   }
-  return ret;
-  // otherwise return NULL because there is no other clients
+  return ret = NULL;
 }
 
 gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
@@ -180,10 +179,10 @@ gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (games[i] == NULL && client1 != NULL && client2 != NULL) {
+      games[i] = game;
       games[i]->client1 = client1;
       games[i]->client2 = client2;
       games[i]->idPartie = i;
-      game = games[i];
       client1->isInGame = true;
       client2->isInGame = true;
       return game;
@@ -200,7 +199,7 @@ void *threadServeur(void *ptr) {
 
   int lenMsgIn;
   clientStructure *clientAddr;
-  gameStructure *iDGame;
+  gameStructure *iDGame = NULL;
   connection_t *connection;
 
   testStruct *test = malloc(sizeof(testStruct));
@@ -231,16 +230,23 @@ void *threadServeur(void *ptr) {
     }
   }
 
+  if (iDGame == NULL) {
+    perror("Game non init");
+  }
+
   // tant que le client ne ferme pas la connexion
   while ((lenMsgIn = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
 
     if (strncmp(buffer_in, "bye", 3) == 0) {
       break;
     }
+    memset(buffer_in, 0, sizeof(buffer_in));
     // réception données
 
     // puis traitement et renvoi
   }
+
+  // TODO: inclure calculs gains
 
   // ecriture sur fichier avant fermeture
   close(connection->sockfd);
@@ -293,3 +299,7 @@ void ecritureResultats(/*struct machin*/) {
   // ici, mutex+ écriture fichier, mutex car potentiellement concurrent.
   // appelée à la fin de la partie avant la fermeture du thread.
 }
+
+// TODO: inclure calculs gains dans la boucle
+// TODO: ouverture/fermeture fichier pour sauvegarde scores
+// TESTER envois C/S et S/C avec des structures
