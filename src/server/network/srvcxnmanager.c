@@ -40,7 +40,7 @@ pthread_mutex_unlock(&lock);
  * Thread allowing server to handle multiple client connections
  * @param ptr connection_t
  * @return
- */
+ *//*
 void *threadProcess(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
@@ -104,7 +104,7 @@ void *threadProcess(void *ptr) {
   free(connection);
   pthread_exit(0);
 }
-
+*/
 int create_server_socket() {
   int sockfd = -1;
   struct sockaddr_in address;
@@ -113,7 +113,7 @@ int create_server_socket() {
   /* create socket */
   sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sockfd <= 0) {
-    fprintf(stderr, "%s: error: cannot create socket\n");
+    fprintf(stderr, "%s", ": error: cannot create socket\n");
     return -3;
   }
 
@@ -147,8 +147,15 @@ int create_server_socket() {
  * @return int the position of an available client
  */
 clientStructure *verifyNbClients(int clientID) {
-  clientStructure *ret = malloc(sizeof(clientStructure));
-  ret = NULL;
+
+  clientStructure *ret = NULL;
+
+  ret = malloc(sizeof(clientStructure));
+
+  if (ret == NULL) {
+    perror("Error initialazing client pointer");
+    exit(-3);
+  }
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if ((connections[i] != NULL) &&
@@ -164,17 +171,22 @@ clientStructure *verifyNbClients(int clientID) {
 
 gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
 
-  gameStructure *ret = malloc(sizeof(gameStructure));
+  gameStructure *game = NULL;
+  game = malloc(sizeof(gameStructure));
+  if (game == NULL) {
+    perror("Error initialazing game pointer");
+    exit(-3);
+  }
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (games[i] == NULL && client1 != NULL && client2 != NULL) {
       games[i]->client1 = client1;
       games[i]->client2 = client2;
       games[i]->idPartie = i;
-      ret = games[i];
+      game = games[i];
       client1->isInGame = true;
       client2->isInGame = true;
-      return ret;
+      return game;
     }
   }
   perror("No game initialized");
