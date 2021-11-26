@@ -195,16 +195,11 @@ gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
 void *threadServeur(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
-  testStruct *buffer_out2 = malloc(sizeof(testStruct));
 
   int lenMsgIn;
   clientStructure *clientAddr;
   gameStructure *iDGame = NULL;
   connection_t *connection;
-
-  testStruct *test = malloc(sizeof(testStruct));
-  test->index = 1;
-  sprintf(test->msg, "Ceci est un test");
 
   if (!ptr)
     pthread_exit(0);
@@ -217,8 +212,6 @@ void *threadServeur(void *ptr) {
 
   printf("Welcome #%i\n", connection->client.idClient);
   // sprintf(buffer_out, "Welcome #%i\n", connection->client.idClient);
-  memcpy(buffer_out2, test, sizeof(testStruct));
-  // sprintf(buffer_out2, (const char *)&test, sizeof(testStruct));
   write(connection->sockfd, buffer_out, sizeof(buffer_out));
 
   // Verification of the number of clients available, minus this client's ID

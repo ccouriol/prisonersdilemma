@@ -64,11 +64,6 @@ typedef struct gameStructure {
   struct roundStructure roundResults;
 } gameStructure;
 
-typedef struct testStruct {
-  int index;
-  char msg[20];
-} testStruct;
-
 void init_sockets_array();
 void add(connection_t *connection);
 void del(connection_t *connection);
