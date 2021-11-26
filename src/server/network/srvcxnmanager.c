@@ -161,12 +161,32 @@ clientStructure *verifyNbClients(int clientID) {
   // otherwise return NULL because there is no other clients
 }
 
+gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
+
+  gameStructure *ret = NULL;
+
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    if (games[i] == NULL && client1 != NULL && client2 != NULL) {
+      games[i]->client1 = client1;
+      games[i]->client2 = client2;
+      games[i]->idPartie = i;
+      ret = games[i];
+      client1->isInGame = true;
+      client2->isInGame = true;
+      return ret;
+    }
+  }
+  perror("No game initialized");
+  exit(-7);
+}
+
 void *threadServeur(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
 
   int lenMsgIn;
-  clientStructure *clientAddr = NULL;
+  clientStructure *clientAddr;
+  gameStructure *iDGame;
   connection_t *connection;
   if (!ptr)
     pthread_exit(0);
@@ -182,8 +202,12 @@ void *threadServeur(void *ptr) {
   write(connection->sockfd, buffer_out, sizeof(buffer_out));
 
   // Verification of the number of clients available, minus this client's ID
-  while (clientAddr == NULL && !(connection->client.isInGame)) {
+  // and creation of the game if there is enough clients
+  while (!(connection->client.isInGame)) {
     clientAddr = verifyNbClients(connection->client.idClient);
+    if (clientAddr != NULL) {
+      iDGame = initGame(clientAddr, &(connection->client));
+    }
   }
 
   // tant que le client ne ferme pas la connexion
@@ -201,16 +225,6 @@ void *threadServeur(void *ptr) {
   del(connection);
   free(connection);
   pthread_exit(0);
-}
-
-int initGame(clientStructure *client1, clientStructure *client2) {
-
-  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-    if (games[i] == NULL) {
-      games[i]->client1 = client1;
-      games[i]->client2 = client2;
-    }
-  }
 }
 
 void calculgains() {

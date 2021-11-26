@@ -57,6 +57,7 @@ void init_sockets_array();
 void add(connection_t *connection);
 void del(connection_t *connection);
 void *threadProcess(void *ptr);
+gameStructure *initGame(clientStructure *client1, clientStructure *client2);
 clientStructure *verifyNbClients(int clientID);
 
 int create_server_socket();
