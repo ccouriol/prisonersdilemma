@@ -22,20 +22,23 @@
  * \remarks None
  * \param ptr
  */
-void *threadProcess(void *ptr) {
+void *threadProcess(void *ptr)
+{
   char buffer_in[BUFFERSIZE];
   int sockfd = *((int *)ptr);
-  int len;
-  while ((len = read(sockfd, buffer_in, BUFFERSIZE)) != 0) {
-    if (strncmp(buffer_in, "exit", 4) == 0) {
+  long int len;
+  while ((len = read(sockfd, buffer_in, BUFFERSIZE)) != 0)
+  {
+    if (strncmp(buffer_in, "exit", 4) == 0)
+    {
       break;
     }
 
-    printf("receive %d chars\n", len);
-    printf("%.*s\n", len, buffer_in);
+    printf("receive %ld chars\n", len);
+    printf("%.*s\n", (int)len, buffer_in);
   }
   close(sockfd);
-  printf("client pthread ended, len=%d\n", len);
+  printf("client pthread ended, len=%ld\n", len);
 }
 
 /*!
@@ -46,29 +49,33 @@ void *threadProcess(void *ptr) {
  * \brief Thread for collecting the id of the game and acknowledge it to the
  * server \remarks None \param ptr
  */
-void *threadIsGame(void *ptr) {
+void *threadIsGame(void *ptr)
+{
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
   char idGame[BUFFERSIZE];
   char IsGame;
   char ask = '?';
-  int len;
+  long int len;
   int sockfd = *((int *)ptr);
 
-  while ((len = read(sockfd, buffer_in, BUFFERSIZE)) != 0) {
-    if (recv(sockfd, idGame, BUFFERSIZE, 0) < 0) {
+  while ((len = read(sockfd, buffer_in, BUFFERSIZE)) != 0)
+  {
+    if (recv(sockfd, idGame, BUFFERSIZE, 0) < 0)
+    {
       puts("recv failed");
     }
     puts("replied recieved");
   }
 
-  if (send(sockfd, idGame, strlen(IsGame), 0) < 0) {
+  if (send(sockfd, idGame, strlen(idGame), 0) < 0)
+  {
     puts("Send failed");
   }
   puts("Send recieved");
 
   close(sockfd);
-  printf("client pthread ended, len=%d\n", len);
+  printf("client pthread ended, len=%ld\n", len);
 }
 
 /*!
@@ -80,11 +87,12 @@ void *threadIsGame(void *ptr) {
  * \remarks None
  * \return
  */
-int open_connection() {
+int open_connection()
+{
   int sockfd;
 
   struct sockaddr_in serverAddr;
-  int port = 7799;
+  uint16_t port = 7799;
 
   // Create the socket.
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -100,9 +108,9 @@ int open_connection() {
   memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
 
   // Connect the socket to the server using the address
-  if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) !=
-      0) {
-    printf("Fail to connect to server");
+  if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) != 0)
+  {
+    puts("Fail to connect to server");
     exit(-1);
   };
 

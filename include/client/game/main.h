@@ -17,11 +17,11 @@
 
 void *threadProcess(void *ptr);
 void *threadIsGame(void *ptr);
-void *threadData(void *ptr);
 
 int open_connection();
 
-typedef struct {
+typedef struct
+{
   unsigned long currentBet;
   unsigned long baseMoney;
   unsigned long roundRemaining;
