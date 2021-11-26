@@ -24,6 +24,7 @@
 
 #define BUFFERSIZE 2048
 #define MAXSIMULTANEOUSCLIENTS 100
+#define MAXSIMULTANEAOUSGAMES 50
 
 // client envoie choix, mise et pactole
 // serveur envoie Nouveau Pactole
@@ -43,6 +44,15 @@ typedef struct {
   struct clientStructure client;
 } connection_t;
 
+typedef struct roundStructure {
+  int client1Choice;
+  int client2Choice;
+  int client1Bet;
+  int client2Bet;
+  int client1Result;
+  int client2Result;
+} roundStructure;
+
 typedef struct gameStructure {
   int idPartie;
   int c1NbTrahison;
@@ -51,6 +61,7 @@ typedef struct gameStructure {
   int c2NbCollab;
   clientStructure *client1;
   clientStructure *client2;
+  struct roundStructure roundResults;
 } gameStructure;
 
 void init_sockets_array();

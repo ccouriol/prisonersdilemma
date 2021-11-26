@@ -147,12 +147,13 @@ int create_server_socket() {
  * @return int the position of an available client
  */
 clientStructure *verifyNbClients(int clientID) {
-  clientStructure *ret = NULL;
+  clientStructure *ret = malloc(sizeof(clientStructure));
+  ret = NULL;
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if ((connections[i] != NULL) &&
         (connections[i]->client.idClient != clientID) &&
-        (connections[i]->client.isInGame == true)) {
+        (connections[i]->client.isInGame == false)) {
       ret = (&(connections[i]->client));
       return ret; // return the index of an available client
     }
@@ -163,7 +164,7 @@ clientStructure *verifyNbClients(int clientID) {
 
 gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
 
-  gameStructure *ret = NULL;
+  gameStructure *ret = malloc(sizeof(gameStructure));
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (games[i] == NULL && client1 != NULL && client2 != NULL) {
@@ -195,10 +196,10 @@ void *threadServeur(void *ptr) {
 
   add(connection);
   connection->client.idClient = connection->index;
+  connection->client.isInGame = false;
 
-  // message de début de connection, peut etre envoyer num client ?
-  printf("Welcome #%i\n", connection->index);
-  sprintf(buffer_out, "Welcome #%i\n", connection->index);
+  printf("Welcome #%i\n", connection->client.idClient);
+  sprintf(buffer_out, "Welcome #%i\n", connection->client.idClient);
   write(connection->sockfd, buffer_out, sizeof(buffer_out));
 
   // Verification of the number of clients available, minus this client's ID
@@ -217,7 +218,7 @@ void *threadServeur(void *ptr) {
       break;
     }
     // réception données
-    
+
     // puis traitement et renvoi
     calculgains();
   }
@@ -226,32 +227,34 @@ void *threadServeur(void *ptr) {
   close(connection->sockfd);
   del(connection);
   free(connection);
+  free(iDGame);
+  free(clientAddr);
   pthread_exit(0);
 }
 
 void calculgains() {
-  for (int i=0; i<MAXSIMULTANEOUSCLIENTS; i++){
-    //On retire les sommes pariées des pactoles
-    games[i]->client1->pactole-=games[i]->client1->sommePariée;
-    games[i]->client2->pactole-=games[i]->client2->sommePariée;
-    //Si les deux joueurs trahissent...
-    if (games[i]->client1->choix==1 && games[i]->client2->choix==1){     
-      games[i]->client1->pactole+=games[i]->client1->sommePariée/2;    
-      games[i]->client2->pactole+=games[i]->client2->sommePariée/2;
-    }  
-    //Si le joueur 1 trahit le joueur 2...
-    else if (games[i]->client1->choix==1 && games[i]->client2->choix==0){
-      games[i]->client1->pactole+=games[i]->client2->sommePariée; 
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    // On retire les sommes pariées des pactoles
+    games[i]->client1->pactole -= games[i]->client1->sommePariée;
+    games[i]->client2->pactole -= games[i]->client2->sommePariée;
+    // Si les deux joueurs trahissent...
+    if (games[i]->client1->choix == 1 && games[i]->client2->choix == 1) {
+      games[i]->client1->pactole += games[i]->client1->sommePariée / 2;
+      games[i]->client2->pactole += games[i]->client2->sommePariée / 2;
     }
-    //Si le joueur 2 trahit le joueur 1...
-    else if (games[i]->client1->choix==0 && games[i]->client2->choix==1){
-      games[i]->client2->pactole+=games[i]->client1->sommePariée; 
+    // Si le joueur 1 trahit le joueur 2...
+    else if (games[i]->client1->choix == 1 && games[i]->client2->choix == 0) {
+      games[i]->client1->pactole += games[i]->client2->sommePariée;
     }
-    //Si les deux joueurs collaborent...
+    // Si le joueur 2 trahit le joueur 1...
+    else if (games[i]->client1->choix == 0 && games[i]->client2->choix == 1) {
+      games[i]->client2->pactole += games[i]->client1->sommePariée;
+    }
+    // Si les deux joueurs collaborent...
     else {
-      games[i]->client1->pactole+=games[i]->client1->sommePariée;    
-      games[i]->client2->pactole+=games[i]->client2->sommePariée;
-    }   
+      games[i]->client1->pactole += games[i]->client1->sommePariée;
+      games[i]->client2->pactole += games[i]->client2->sommePariée;
+    }
   }
   perror("Too much simultaneous connections");
   exit(-5);
