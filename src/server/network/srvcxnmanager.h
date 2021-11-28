@@ -11,6 +11,8 @@
  */
 
 #include <arpa/inet.h>
+#include <binn.h>
+// https://github.com/liteserver/binn
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
