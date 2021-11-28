@@ -1,6 +1,7 @@
 #include "srvcxnmanager.h"
 
 connection_t *connections[MAXSIMULTANEOUSCLIENTS];
+gameStructure *games[MAXSIMULTANEOUSCLIENTS];
 
 void init_sockets_array() {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
@@ -9,8 +10,7 @@ void init_sockets_array() {
 }
 
 void add(connection_t *connection) {
-  int i;
-  for (i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (connections[i] == NULL) {
       connections[i] = connection;
       return;
@@ -40,7 +40,7 @@ pthread_mutex_unlock(&lock);
  * Thread allowing server to handle multiple client connections
  * @param ptr connection_t
  * @return
- */
+ *//*
 void *threadProcess(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
@@ -104,7 +104,7 @@ void *threadProcess(void *ptr) {
   free(connection);
   pthread_exit(0);
 }
-
+*/
 int create_server_socket() {
   int sockfd = -1;
   struct sockaddr_in address;
@@ -113,7 +113,7 @@ int create_server_socket() {
   /* create socket */
   sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sockfd <= 0) {
-    fprintf(stderr, "%s: error: cannot create socket\n");
+    fprintf(stderr, "%s", ": error: cannot create socket\n");
     return -3;
   }
 
@@ -146,60 +146,144 @@ int create_server_socket() {
  *
  * @return int the position of an available client
  */
-int verifyNbClients() {
-  int ret = -10;
+clientStructure *verifyNbClients(int clientID) {
+
+  clientStructure *ret = NULL;
+
+  ret = malloc(sizeof(clientStructure));
+
+  if (ret == NULL) {
+    perror("Error initialazing client pointer");
+    exit(-3);
+  }
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-    if ((connections[i] != NULL) && (connections[i]->client.isInGame == true)) {
-      ret = i;
+    if ((connections[i] != NULL) &&
+        (connections[i]->client.idClient != clientID) &&
+        (connections[i]->client.isInGame == false)) {
+      ret = (&(connections[i]->client));
       return ret; // return the index of an available client
     }
   }
-  return ret;
-  // otherwise return a negative number because there is no other clients
+  return ret = NULL;
+}
+
+gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
+
+  gameStructure *game = NULL;
+  game = malloc(sizeof(gameStructure));
+  if (game == NULL) {
+    perror("Error initialazing game pointer");
+    exit(-3);
+  }
+
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    if (games[i] == NULL && client1 != NULL && client2 != NULL) {
+      games[i] = game;
+      games[i]->client1 = client1;
+      games[i]->client2 = client2;
+      games[i]->idPartie = i;
+      client1->isInGame = true;
+      client2->isInGame = true;
+      return game;
+    }
+  }
+  perror("No game initialized");
+  exit(-7);
 }
 
 void *threadServeur(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
 
-  int len, clientIndex = -90;
+  int lenMsgIn;
+  clientStructure *clientAddr;
+  gameStructure *iDGame = NULL;
   connection_t *connection;
+  roundStructure *AEnvoyer;
+
   if (!ptr)
     pthread_exit(0);
   connection = (connection_t *)ptr;
   printf("New incoming connection \n");
 
   add(connection);
+  connection->client.idClient = connection->index;
+  connection->client.isInGame = false;
 
-  // message de début de connection, peut etre envoyer num client ?
-  printf("Welcome #%i\n", connection->index);
-  sprintf(buffer_out, "Welcome #%i\n", connection->index);
+  printf("Welcome #%i\n", connection->client.idClient);
+  // sprintf(buffer_out, "Welcome #%i\n", connection->client.idClient);
   write(connection->sockfd, buffer_out, sizeof(buffer_out));
+  //BALANCER LA STRUCTURE DANS LE SOCKET SANS BUFFER
+  //RECUP = RECUPERER AVEC BUFFER_OUT EN CHAR
+  //PUIS PASSER DANS UNE VARIABLE DE TYPE STRUCTURE.
 
-  // Verification of the number of clients available
-  while (clientIndex < 0) {
-    clientIndex = verifyNbClients();
+  // Verification of the number of clients available, minus this client's ID
+  // and creation of the game if there is enough clients
+  while (!(connection->client.isInGame)) {
+    clientAddr = verifyNbClients(connection->client.idClient);
+    if (clientAddr != NULL) {
+      iDGame = initGame(clientAddr, &(connection->client));
+    }
+  }
+
+  if (iDGame == NULL) {
+    perror("Game non init");
   }
 
   // tant que le client ne ferme pas la connexion
-  while ((len = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
+  while ((lenMsgIn = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
 
     if (strncmp(buffer_in, "bye", 3) == 0) {
       break;
     }
+    memset(buffer_in, 0, sizeof(buffer_in));
     // réception données
+
     // puis traitement et renvoi
   }
+
+  // TODO: inclure calculs gains
 
   // ecriture sur fichier avant fermeture
   close(connection->sockfd);
   del(connection);
   free(connection);
+  free(iDGame);
+  free(clientAddr);
   pthread_exit(0);
 }
 
-void calculgains() {
+void calculgains(gameStructure *iDGame) {
+  // On retire les sommes pariées des pactoles
+  iDGame->client1->pactole -= iDGame->client1->sommePariée;
+  iDGame->client2->pactole -= iDGame->client2->sommePariée;
+  // Si les deux joueurs trahissent...
+  if (iDGame->client1->choix == 1 && iDGame->client2->choix == 1) {
+    iDGame->client1->pactole += iDGame->client1->sommePariée / 2;
+    iDGame->client2->pactole += iDGame->client2->sommePariée / 2;
+    iDGame->c1NbTrahison += 1;
+    iDGame->c2NbTrahison += 1;
+  }
+  // Si le joueur 1 trahit le joueur 2...
+  else if (iDGame->client1->choix == 1 && iDGame->client2->choix == 0) {
+    iDGame->client1->pactole += iDGame->client2->sommePariée;
+    iDGame->c1NbTrahison += 1;
+    iDGame->c2NbCollab += 1;
+  }
+  // Si le joueur 2 trahit le joueur 1...
+  else if (iDGame->client1->choix == 0 && iDGame->client2->choix == 1) {
+    iDGame->client2->pactole += iDGame->client1->sommePariée;
+    iDGame->c1NbCollab += 1;
+    iDGame->c2NbTrahison += 1;
+  }
+  // Si les deux joueurs collaborent...
+  else {
+    iDGame->client1->pactole += iDGame->client1->sommePariée;
+    iDGame->client2->pactole += iDGame->client2->sommePariée;
+    iDGame->c1NbCollab += 1;
+    iDGame->c2NbCollab += 1;
+  }
   // calcule les gains et les renvois
   // N'est pas chargée de les envoyer sur le socket
   // prends en entrée une structure
@@ -212,3 +296,7 @@ void ecritureResultats(/*struct machin*/) {
   // ici, mutex+ écriture fichier, mutex car potentiellement concurrent.
   // appelée à la fin de la partie avant la fermeture du thread.
 }
+
+// TODO: inclure calculs gains dans la boucle
+// TODO: ouverture/fermeture fichier pour sauvegarde scores
+// TESTER envois C/S et S/C avec des structures
