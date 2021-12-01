@@ -19,7 +19,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "network/srvcxnmanager.h"
+#include "../../include/server/network/srvcxnmanager.h"
 
 /*
  * File:   main.c
@@ -55,7 +55,9 @@ int main(int argc, char **argv) {
       free(connection);
     } else {
       // start a new thread but do not wait for it
-      pthread_create(&thread, 0, threadProcess, (void *)connection);
+      // pthread_create(&thread, 0, threadProcess, (void *)connection);
+      pthread_create(&thread, 0, threadServeur, (void *)connection);
+
       pthread_detach(thread);
     }
   }

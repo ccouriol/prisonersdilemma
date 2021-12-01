@@ -1,4 +1,4 @@
-#include "srvcxnmanager.h"
+#include "../../../include/server/network/srvcxnmanager.h"
 
 connection_t *connections[MAXSIMULTANEOUSCLIENTS];
 gameStructure *games[MAXSIMULTANEOUSCLIENTS];
@@ -40,7 +40,7 @@ pthread_mutex_unlock(&lock);
  * Thread allowing server to handle multiple client connections
  * @param ptr connection_t
  * @return
- */
+ *//*
 void *threadProcess(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
@@ -104,7 +104,7 @@ void *threadProcess(void *ptr) {
   free(connection);
   pthread_exit(0);
 }
-
+*/
 int create_server_socket() {
   int sockfd = -1;
   struct sockaddr_in address;
@@ -113,7 +113,7 @@ int create_server_socket() {
   /* create socket */
   sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sockfd <= 0) {
-    fprintf(stderr, "%s: error: cannot create socket\n");
+    fprintf(stderr, "%s", ": error: cannot create socket\n");
     return -3;
   }
 
@@ -147,33 +147,45 @@ int create_server_socket() {
  * @return int the position of an available client
  */
 clientStructure *verifyNbClients(int clientID) {
+
   clientStructure *ret = NULL;
+
+  ret = malloc(sizeof(clientStructure));
+
+  if (ret == NULL) {
+    perror("Error initialazing client pointer");
+    exit(-3);
+  }
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if ((connections[i] != NULL) &&
         (connections[i]->client.idClient != clientID) &&
-        (connections[i]->client.isInGame == true)) {
+        (connections[i]->client.isInGame == false)) {
       ret = (&(connections[i]->client));
       return ret; // return the index of an available client
     }
   }
-  return ret;
-  // otherwise return NULL because there is no other clients
+  return ret = NULL;
 }
 
 gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
 
-  gameStructure *ret = NULL;
+  gameStructure *game = NULL;
+  game = malloc(sizeof(gameStructure));
+  if (game == NULL) {
+    perror("Error initialazing game pointer");
+    exit(-3);
+  }
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (games[i] == NULL && client1 != NULL && client2 != NULL) {
+      games[i] = game;
       games[i]->client1 = client1;
       games[i]->client2 = client2;
       games[i]->idPartie = i;
-      ret = games[i];
       client1->isInGame = true;
       client2->isInGame = true;
-      return ret;
+      return game;
     }
   }
   perror("No game initialized");
@@ -186,7 +198,7 @@ void *threadServeur(void *ptr) {
 
   int lenMsgIn;
   clientStructure *clientAddr;
-  gameStructure *iDGame;
+  gameStructure *iDGame = NULL;
   connection_t *connection;
   dataSentReceived *data;
   if (!ptr)
@@ -196,11 +208,14 @@ void *threadServeur(void *ptr) {
 
   add(connection);
   connection->client.idClient = connection->index;
+  connection->client.isInGame = false;
 
-  // message de début de connection, peut etre envoyer num client ?
-  printf("Welcome #%i\n", connection->index);
-  sprintf(buffer_out, "Welcome #%i\n", connection->index);
+  printf("Welcome #%i\n", connection->client.idClient);
+  // sprintf(buffer_out, "Welcome #%i\n", connection->client.idClient);
   write(connection->sockfd, buffer_out, sizeof(buffer_out));
+  //BALANCER LA STRUCTURE DANS LE SOCKET SANS BUFFER
+  //RECUP = RECUPERER AVEC BUFFER_OUT EN CHAR
+  //PUIS PASSER DANS UNE VARIABLE DE TYPE STRUCTURE.
 
   // Verification of the number of clients available, minus this client's ID
   // and creation of the game if there is enough clients
@@ -211,12 +226,17 @@ void *threadServeur(void *ptr) {
     }
   }
 
+  if (iDGame == NULL) {
+    perror("Game non init");
+  }
+
   // tant que le client ne ferme pas la connexion
   while ((lenMsgIn = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
 
     if (strncmp(buffer_in, "bye", 3) == 0) {
       break;
     }
+    memset(buffer_in, 0, sizeof(buffer_in));
     // réception données
     clientAddr->pactole=data->totalMoney;
     clientAddr->choix=data->cooperate;
@@ -228,10 +248,14 @@ void *threadServeur(void *ptr) {
     data->currentBet=clientAddr->sommePariée;
   }
 
+  // TODO: inclure calculs gains
+
   // ecriture sur fichier avant fermeture
   close(connection->sockfd);
   del(connection);
   free(connection);
+  free(iDGame);
+  free(clientAddr);
   pthread_exit(0);
 }
 
@@ -278,3 +302,7 @@ void ecritureResultats(/*struct machin*/) {
   // ici, mutex+ écriture fichier, mutex car potentiellement concurrent.
   // appelée à la fin de la partie avant la fermeture du thread.
 }
+
+// TODO: inclure calculs gains dans la boucle
+// TODO: ouverture/fermeture fichier pour sauvegarde scores
+// TESTER envois C/S et S/C avec des structures

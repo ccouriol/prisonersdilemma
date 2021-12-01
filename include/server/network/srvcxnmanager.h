@@ -11,6 +11,8 @@
  */
 
 #include <arpa/inet.h>
+// #include <binn.h>
+// https://github.com/liteserver/binn
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -24,6 +26,7 @@
 
 #define BUFFERSIZE 2048
 #define MAXSIMULTANEOUSCLIENTS 100
+#define MAXSIMULTANEAOUSGAMES 50
 
 // client envoie choix, mise et pactole
 // serveur envoie Nouveau Pactole
@@ -31,8 +34,8 @@ typedef struct clientStructure {
   bool isInGame;
   int idClient;
   bool choix;
-  int sommePariée;
-  int pactole;
+  unsigned long sommePariée;
+  unsigned long pactole;
 } clientStructure;
 
 typedef struct {
@@ -43,6 +46,15 @@ typedef struct {
   struct clientStructure client;
 } connection_t;
 
+typedef struct roundStructure {
+  int client1Choice;
+  int client2Choice;
+  int client1Bet;
+  int client2Bet;
+  int client1Result;
+  int client2Result;
+} roundStructure;
+
 typedef struct gameStructure {
   int idPartie;
   int c1NbTrahison;
@@ -51,6 +63,7 @@ typedef struct gameStructure {
   int c2NbCollab;
   clientStructure *client1;
   clientStructure *client2;
+  struct roundStructure roundResults;
 } gameStructure;
 
 typedef struct dataSentReceived{
@@ -67,6 +80,7 @@ void *threadProcess(void *ptr);
 gameStructure *initGame(clientStructure *client1, clientStructure *client2);
 clientStructure *verifyNbClients(int clientID);
 void calculgains(gameStructure *iDGame);
+void *threadServeur(void *ptr);
 
 int create_server_socket();
 
