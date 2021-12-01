@@ -45,7 +45,7 @@ make clean
 ```bash
 apt install clang clang-tidy clang-format python3 python3-pip cppcheck valgrind libconfig-dev
 pip3 install pre-commit
-PATH="$PATH:$HOME/.local/bin"
+export PATH="$PATH:$HOME/.local/bin"
 pre-commit install --hook-type commit-msg
 pre-commit install
 pre-commit autoupdate
