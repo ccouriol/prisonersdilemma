@@ -53,12 +53,20 @@ typedef struct gameStructure {
   clientStructure *client2;
 } gameStructure;
 
+typedef struct dataSentReceived{
+  unsigned long currentBet;
+  unsigned long moneyGainLost;
+  bool cooperate;  //1 collaborer     0 trahir
+  unsigned long totalMoney;
+} dataSentReceived;
+
 void init_sockets_array();
 void add(connection_t *connection);
 void del(connection_t *connection);
 void *threadProcess(void *ptr);
 gameStructure *initGame(clientStructure *client1, clientStructure *client2);
 clientStructure *verifyNbClients(int clientID);
+void calculgains(gameStructure *iDGame);
 
 int create_server_socket();
 
