@@ -33,9 +33,9 @@
 typedef struct clientStructure {
   bool isInGame;
   int idClient;
-  bool choix;
-  unsigned long sommePariée;
-  unsigned long pactole;
+  bool cooperate;
+  unsigned long bet;
+  unsigned long money;
 } clientStructure;
 
 typedef struct {
@@ -46,24 +46,14 @@ typedef struct {
   struct clientStructure client;
 } connection_t;
 
-typedef struct roundStructure {
-  int client1Choice;
-  int client2Choice;
-  int client1Bet;
-  int client2Bet;
-  int client1Result;
-  int client2Result;
-} roundStructure;
-
 typedef struct gameStructure {
-  int idPartie;
-  int c1NbTrahison;
+  int idGame;
+  int c1NbTreason;
   int c1NbCollab;
-  int c2NbTrahison;
+  int c2NbTreason;
   int c2NbCollab;
   clientStructure *client1;
   clientStructure *client2;
-  struct roundStructure roundResults;
 } gameStructure;
 
 typedef struct dataSentReceived{
@@ -71,15 +61,18 @@ typedef struct dataSentReceived{
   unsigned long moneyGainLost;
   bool cooperate;  //1 collaborer     0 trahir
   unsigned long totalMoney;
+  int iDGame;
+  bool gameEnded;
 } dataSentReceived;
 
 void init_sockets_array();
 void add(connection_t *connection);
 void del(connection_t *connection);
 void *threadProcess(void *ptr);
-gameStructure *initGame(clientStructure *client1, clientStructure *client2);
 clientStructure *verifyNbClients(int clientID);
-void calculgains(gameStructure *iDGame);
+gameStructure *initGame(clientStructure *client1, clientStructure *client2);
+void profitsCalculation(gameStructure *gameInfo);
+void saveOnfile(gameStructure *gameInfo);
 void *threadServeur(void *ptr);
 
 int create_server_socket();
