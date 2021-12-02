@@ -1,5 +1,5 @@
 /*!
- * \file main.c
+* \file main.c
  * \author GABETTE Cédric
  * \version 0.1
  * \date 26/11/2021
@@ -18,38 +18,36 @@ int time_remaining = 10;
 s_clientData clientData;
 
 /*!
- * \fn void on_window_main_destroy()
+* \fn void on_window_main_destroy() 
  * \author Clément Couriol
  * \version 0.1
  * \date  17/11/2021
  * \brief Close window (invoked by the event anager)
  * \remarks None
- */
-void on_window_main_destroy()
-{
+*/
+void on_window_main_destroy() {
   puts("Quitting");
   gtk_main_quit();
 }
 
 /*!
-* \fn int start_countdown()
-* \author Clément Couriol
-* \version 0.1
-* \date  17/11/2021
-* \brief 
-* \remarks None
-* \return 
+* \fn int start_countdown() 
+ * \author Clément Couriol
+ * \version 0.1
+ * \date  17/11/2021
+ * \brief
+ * \remarks None
+ * \return
 */
-int start_countdown()
-{
+int start_countdown() {
   // puts("Timer started");
-  if (time_remaining > 0)
-  {
+  if (time_remaining > 0) {
     time_remaining--;
     char timer_text[2];
     puts("Timer running, time");
     printf("%d\n", time_remaining);
-    GtkLabel *timelabel = GTK_LABEL(gtk_builder_get_object(builder, "text_timerremaining"));
+    GtkLabel *timelabel =
+        GTK_LABEL(gtk_builder_get_object(builder, "text_timerremaining"));
     snprintf(timer_text, 100, "%i", time_remaining);
     gtk_label_set_text(timelabel, timer_text);
   }
@@ -57,17 +55,15 @@ int start_countdown()
 }
 
 /*!
-* \fn void on_bet_clicked(GtkWidget *widget, gpointer data)
-* \author Clément Couriol
-* \version 0.1
-* \date  24/11/2021
-* \brief Function called when user click on a bet button
-* \remarks None
-* \param widget 
-* \param data 
+* \fn void on_bet_clicked(GtkWidget *widget) 
+ * \author Clément Couriol
+ * \version 0.1
+ * \date  24/11/2021
+ * \brief Function called when user click on a bet button
+ * \remarks None
+* \param widget
 */
-void on_bet_clicked(GtkWidget *widget)
-{
+void on_bet_clicked(GtkWidget *widget) {
   GtkButton *btn = GTK_BUTTON(widget);
   gchar *value = (gchar *)gtk_button_get_label(widget);
   char *end;
@@ -81,26 +77,21 @@ void on_bet_clicked(GtkWidget *widget)
 }
 
 /*!
-* \fn void on_action_clicked(GtkWidget *widget, gpointer userdata)
-* \author Clément Couriol
-* \version 0.1
-* \date  24/11/2021
-* \brief Function called when user click on coop or betray button
-* \remarks None
-* \param widget 
-* \param userdata
+* \fn void on_action_clicked(GtkWidget *widget) 
+ * \author Clément Couriol
+ * \version 0.1
+ * \date  24/11/2021
+ * \brief Function called when user click on coop or betray button
+ * \remarks None
+* \param widget
 */
-void on_action_clicked(GtkWidget *widget)
-{
+void on_action_clicked(GtkWidget *widget) {
   GtkButton *btn = GTK_BUTTON(widget);
   gchar *value = (gchar *)gtk_button_get_label(widget);
-  if (!(strcmp(value, "Coop")))
-  {
+  if (!(strcmp(value, "Coop"))) {
     puts("Coop clicked");
     clientData.cooperate = true;
-  }
-  else
-  {
+  } else {
     puts("Betray clicked");
     clientData.cooperate = false;
   }
@@ -108,71 +99,66 @@ void on_action_clicked(GtkWidget *widget)
 }
 
 /*!
- * \fn int main(int argc, char **argv)
+* \fn int main(int argc, char **argv) 
  * \author Clément Couriol
  * \version 0.1
  * \date 17/11/2021
  * \brief Main function of the program
  * \remarks None
- * \param argc
- * \param *argv
+* \param argc
+* \param *argv
  * \return 0 if all went good
- */
-int main(int argc, char **argv)
-{
+*/
+int main(int argc, char **argv) {
   GtkWidget *win;
-
+  int game = 0;
   int sockfd;
-  long int status = 0;
   char msg[100];
   pthread_t thread;
 
   sockfd = open_connection();
 
-  strcpy(msg, "Hello from Player1"); // Xeon is the name of the this client
+  strcpy(msg, "Hello from Player1");
   printf("sending : %s\n", msg);
   write(sockfd, msg, strlen(msg));
 
   // phthread created for reading
   pthread_create(&thread, 0, threadProcess, &sockfd);
-  // write(connection->sock,"Main APP Still running",15);
+  
   pthread_detach(thread);
-  do
-  {
-    fgets(msg, 100, stdin);
-    // printf("sending : %s\n", msg);
-    status = write(sockfd, msg, strlen(msg));
-    // memset(msg,'\0',100);
-  } while (status != -1);
 
-  status = 0;
-
-  // phthread created to launch the game
-  pthread_create(&thread, 0, threadIsGame, &sockfd);
-  // write(connection->sock, "<IdGame>")
+  // phthread created to launch the GUI
+  pthread_create(&thread, 0, threadGame, &sockfd);
+  
   pthread_detach(thread);
-  do
-  {
-    fgets(msg, 100, stdin);
-    // printf("sending : %s\n", msg);
-    status = write(sockfd, msg, strlen(msg));
-    // memset(msg,'\0',100);
-  } while (status != -1);
+
+  printf("game --> %d", game);
+  
+  while(1) {
+    read(sockfd, game, sizeof(int));
+    if(game == 1) {
+      break;
+    }
+  }
+  if(game == 1) {
+
+  puts("Game is launched !");
 
   gtk_init(&argc, &argv);
   clientData.baseMoney = 500;
-  // builder = gtk_builder_new_from_file("./glade/Interface.glade");
-  // win = GTK_WIDGET(gtk_builder_get_object(builder, "app_win"));
+  builder = gtk_builder_new_from_file("./glade/Interface.glade");
+  win = GTK_WIDGET(gtk_builder_get_object(builder, "app_win"));
   builder = gtk_builder_new_from_file("./glade/Prisoner.glade");
   win = GTK_WIDGET(gtk_builder_get_object(builder, "app_prisoner"));
 
   gtk_builder_connect_signals(builder, NULL);
   gtk_widget_show(win);
-  if (time_remaining > 0)
-  {
+  if (time_remaining > 0) {
     g_timeout_add(1000, (GSourceFunc)start_countdown, NULL);
     start_countdown();
   }
   gtk_main();
   return (EXIT_SUCCESS);
+  }
+  
 }

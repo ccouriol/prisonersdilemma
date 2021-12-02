@@ -16,16 +16,19 @@
 #define BUFFERSIZE 2048
 
 void *threadProcess(void *ptr);
-void *threadIsGame(void *ptr);
-
+void *threadGame(void *ptr);
 int open_connection();
 
-typedef struct
-{
+typedef struct {
   unsigned long currentBet;
   unsigned long baseMoney;
   unsigned long roundRemaining;
   bool cooperate;
 } s_clientData;
 
-#endif /* MAIN_H */
+typedef struct {
+  char idGame[50];
+  bool gameLaunched;
+} c_clientInfo;
+
+#endif // MAIN_H
