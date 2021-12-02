@@ -195,16 +195,10 @@ gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
 void *threadServeur(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
-  testStruct *buffer_out2 = malloc(sizeof(testStruct));
+  testStruct *envoie = malloc(sizeof(testStruct));
+  testStruct *received = malloc(sizeof(testStruct));
 
-  int lenMsgIn;
-  clientStructure *clientAddr;
-  gameStructure *iDGame = NULL;
   connection_t *connection;
-
-  testStruct *test = malloc(sizeof(testStruct));
-  test->index = 1;
-  sprintf(test->msg, "Ceci est un test");
 
   if (!ptr)
     pthread_exit(0);
@@ -216,35 +210,20 @@ void *threadServeur(void *ptr) {
   connection->client.isInGame = false;
 
   printf("Welcome #%i\n", connection->client.idClient);
-  // sprintf(buffer_out, "Welcome #%i\n", connection->client.idClient);
-  memcpy(buffer_out2, test, sizeof(testStruct));
-  // sprintf(buffer_out2, (const char *)&test, sizeof(testStruct));
-  write(connection->sockfd, buffer_out, sizeof(buffer_out));
 
-  // Verification of the number of clients available, minus this client's ID
-  // and creation of the game if there is enough clients
-  while (!(connection->client.isInGame)) {
-    clientAddr = verifyNbClients(connection->client.idClient);
-    if (clientAddr != NULL) {
-      iDGame = initGame(clientAddr, &(connection->client));
-    }
-  }
+  // Remplissage de la structure
+  envoie->chiffre = 55;
+  envoie->coop = true;
+  strcat(envoie->msg, "Message de bufferOut");
 
-  if (iDGame == NULL) {
-    perror("Game non init");
-  }
+  // On écrit la structure sans passer par référence sur le flux de sortie
+  write(connection->sockfd, envoie, sizeof(testStruct));
+  //                 socket    - structure de réception - taille
+  read(connection->sockfd, received, sizeof(testStruct));
 
-  // tant que le client ne ferme pas la connexion
-  while ((lenMsgIn = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
-
-    if (strncmp(buffer_in, "bye", 3) == 0) {
-      break;
-    }
-    memset(buffer_in, 0, sizeof(buffer_in));
-    // réception données
-
-    // puis traitement et renvoi
-  }
+  printf("%s\n", received->msg);
+  printf("%d\n", received->chiffre);
+  printf("%d\n", received->coop);
 
   // TODO: inclure calculs gains
 
@@ -252,8 +231,6 @@ void *threadServeur(void *ptr) {
   close(connection->sockfd);
   del(connection);
   free(connection);
-  free(iDGame);
-  free(clientAddr);
   pthread_exit(0);
 }
 

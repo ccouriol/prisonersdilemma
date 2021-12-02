@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
   pthread_t thread;
 
   // init array
-  init_sockets_array();
+  // init_sockets_array();
   // create socket
   sockfd = create_server_socket();
 
@@ -48,9 +48,10 @@ int main(int argc, char **argv) {
   while (true) {
     // accept incoming connections
     connection = (connection_t *)malloc(sizeof(connection_t));
-    connection->sockfd =
-        accept(sockfd, &connection->address, &connection->addr_len);
+    connection->sockfd = accept(sockfd, (connection_t *)&connection->address,
+                                &connection->addr_len);
     connection->index = index++;
+
     if (connection->sockfd <= 0) {
       free(connection);
     } else {
@@ -60,6 +61,9 @@ int main(int argc, char **argv) {
 
       pthread_detach(thread);
     }
+    
   }
+
+  
   return (EXIT_SUCCESS);
 }

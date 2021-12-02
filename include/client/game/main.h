@@ -20,12 +20,17 @@ void *threadIsGame(void *ptr);
 
 int open_connection();
 
-typedef struct
-{
+typedef struct {
   unsigned long currentBet;
   unsigned long baseMoney;
   unsigned long roundRemaining;
   bool cooperate;
 } s_clientData;
+
+typedef struct TestStruct {
+  char msg[200];
+  bool coop;
+  int chiffre;
+} testStruct;
 
 #endif /* MAIN_H */

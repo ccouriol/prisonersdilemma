@@ -11,6 +11,7 @@
  */
 
 /*! Importation of librairies*/
+#include "../../../include/client/utils/utils.h"
 #include "../../../include/client/game/main.h"
 
 /*!
@@ -22,23 +23,32 @@
  * \remarks None
  * \param ptr
  */
-void *threadProcess(void *ptr)
-{
+void *threadProcess(void *ptr) {
+  // Il faut réserver un espace mémoire pour les structures d'échanges
   char buffer_in[BUFFERSIZE];
-  int sockfd = *((int *)ptr);
-  long int len;
-  while ((len = read(sockfd, buffer_in, BUFFERSIZE)) != 0)
-  {
-    if (strncmp(buffer_in, "exit", 4) == 0)
-    {
-      break;
-    }
+  char buffer_out[BUFFERSIZE];
+  testStruct *envoie = malloc(sizeof(testStruct));
+  testStruct *received = malloc(sizeof(testStruct));
 
-    printf("receive %ld chars\n", len);
-    printf("%.*s\n", (int)len, buffer_in);
-  }
+  int sockfd = *((int *)ptr);
+
+  /*Remplissage de la structure*/
+  envoie->coop = false;
+  envoie->chiffre = 159;
+  strcat(envoie->msg, "Message de client");
+
+  // On lit sur le flux d'entrée
+  //            socket - structure de réception - taille
+  read(sockfd, received, sizeof(testStruct));
+
+  printf("%s\n", received->msg);
+  printf("%d\n", received->chiffre);
+  printf("%d\n", received->coop);
+
+  // On écrit la structure sans passer par référence sur le flux de sortie
+  write(sockfd, envoie, sizeof(testStruct));
+
   close(sockfd);
-  printf("client pthread ended, len=%ld\n", len);
 }
 
 /*!
@@ -49,8 +59,7 @@ void *threadProcess(void *ptr)
  * \brief Thread for collecting the id of the game and acknowledge it to the
  * server \remarks None \param ptr
  */
-void *threadIsGame(void *ptr)
-{
+void *threadIsGame(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
   char idGame[BUFFERSIZE];
@@ -59,17 +68,14 @@ void *threadIsGame(void *ptr)
   long int len;
   int sockfd = *((int *)ptr);
 
-  while ((len = read(sockfd, buffer_in, BUFFERSIZE)) != 0)
-  {
-    if (recv(sockfd, idGame, BUFFERSIZE, 0) < 0)
-    {
+  while ((len = read(sockfd, buffer_in, BUFFERSIZE)) != 0) {
+    if (recv(sockfd, idGame, BUFFERSIZE, 0) < 0) {
       puts("recv failed");
     }
     puts("replied recieved");
   }
 
-  if (send(sockfd, idGame, strlen(idGame), 0) < 0)
-  {
+  if (send(sockfd, idGame, strlen(idGame), 0) < 0) {
     puts("Send failed");
   }
   puts("Send recieved");
@@ -87,8 +93,7 @@ void *threadIsGame(void *ptr)
  * \remarks None
  * \return
  */
-int open_connection()
-{
+int open_connection() {
   int sockfd;
 
   struct sockaddr_in serverAddr;
@@ -108,11 +113,12 @@ int open_connection()
   memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
 
   // Connect the socket to the server using the address
-  if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) != 0)
-  {
+  if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) !=
+      0) {
     puts("Fail to connect to server");
     exit(-1);
   };
+  puts("connecté");
 
   return sockfd;
 }

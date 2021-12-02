@@ -53,6 +53,10 @@ typedef struct roundStructure {
   int client2Result;
 } roundStructure;
 
+typedef struct recever {
+  int receive;
+} recever;
+
 typedef struct gameStructure {
   int idPartie;
   int c1NbTrahison;
@@ -64,9 +68,10 @@ typedef struct gameStructure {
   struct roundStructure roundResults;
 } gameStructure;
 
-typedef struct testStruct {
-  int index;
-  char msg[20];
+typedef struct TestStruct {
+  char msg[200];
+  bool coop;
+  int chiffre;
 } testStruct;
 
 void init_sockets_array();
