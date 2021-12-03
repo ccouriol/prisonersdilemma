@@ -2,7 +2,7 @@
 
 connection_t *connections[MAXSIMULTANEOUSCLIENTS];
 gameStructure *games[MAXSIMULTANEOUSCLIENTS];
-clientStructure *clients[MAXSIMULTANEOUSCLIENTS];
+clientStructure *tabClients[MAXSIMULTANEOUSCLIENTS];
 
 void init_sockets_array() {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
@@ -69,17 +69,16 @@ int create_server_socket() {
 }
 
 void addclient(clientStructure *client) {
-
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-    if (clients[i] == NULL) {
+    if (tabClients[i] == NULL) {
       client->idClient = i;
       client->isInGame = false;
-      clients[i] = client;
+      tabClients[i] = client;
       return;
     }
   }
   perror("Too much simultaneous clients");
-  exit(-5);
+  exit(15);
 }
 /**
  * @brief Search for an available client
@@ -88,17 +87,19 @@ void addclient(clientStructure *client) {
  */
 clientStructure *verifyNbClients(int clientID) {
 
-  clientStructure *ret = NULL;
-  ret = malloc(sizeof(clientStructure));
-  if (ret == NULL) {
-    perror("Error initialazing client pointer");
-    exit(-3);
-  }
+  clientStructure *ret;
+  // ret = malloc(sizeof(clientStructure));
+  // if (!ret)
+  //   pthread_exit(0);
+  // if (ret == NULL) {
+  //   perror("Error initialazing client pointer");
+  //   exit(-3);
+  // }
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-    if ((clients[i] != NULL) && (clients[i]->idClient != clientID) &&
-        (clients[i]->isInGame == false)) {
-      ret = (clients[i]);
+    if ((tabClients[i] != NULL) && (tabClients[i]->idClient != clientID) &&
+        (tabClients[i]->isInGame == false)) {
+      ret = (tabClients[i]);
       return ret; // return the index of an available client
     }
   }
@@ -107,12 +108,13 @@ clientStructure *verifyNbClients(int clientID) {
 
 gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
 
-  gameStructure *game = NULL;
-  game = malloc(sizeof(gameStructure));
-  if (game == NULL) {
-    perror("Error initialazing game pointer");
-    exit(-3);
-  }
+  gameStructure *game = malloc(sizeof(gameStructure));
+  // if (game == NULL) {
+  //   perror("Error initialazing game pointer");
+  //   exit(-3);
+  // }
+  if (!game)
+    pthread_exit(0);
 
   game->client1 = client1;
   game->client2 = client2;
@@ -136,7 +138,8 @@ gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
 
 void profitsCalculation(gameStructure *gameInfo) {
 
-  clientStructure *client1 = gameInfo->client1;
+  clientStructure *client1;
+  client1 = gameInfo->client1;
   clientStructure *client2 = gameInfo->client2;
 
   // On retire les sommes pariées des pactoles
@@ -220,80 +223,93 @@ void *threadServeur(void *ptr) {
   // creation of the buffer to receive and send data
   dataSentReceived *dataRecieved = malloc(sizeof(dataSentReceived));
   dataSentReceived *dataToSend = malloc(sizeof(dataSentReceived));
+  clientStructure *client = malloc(sizeof(clientStructure));
 
   bool hasGameEnded = false;
   clientStructure *otherClientAddr;
-  clientStructure *client = NULL;
-  gameStructure *gameInfo = NULL;
+  // gameStructure *gameInfo = NULL;
   connection_t *connection;
+  gameStructure *gameInfo;
+  // gameInfo = malloc(sizeof(gameStructure));
 
   if (!ptr)
     pthread_exit(0);
   connection = (connection_t *)ptr;
   printf("New incoming connection \n");
 
-  client = malloc(sizeof(clientStructure));
-  if (client == NULL) {
-    perror("No client initialized");
-  }
+  if (!client)
+    pthread_exit(0);
+
+  if (!dataRecieved)
+    pthread_exit(0);
+
+  if (!dataToSend)
+    pthread_exit(0);
+  // client->idClient = 400;
+
+  // if (!client) {
+  //   perror("No client initialized");
+  // }
 
   add(connection);
   addclient(client);
-
   printf("Welcome #%i\n", client->idClient);
 
   // Verification of the number of clients available, minus this client's ID
   // and creation of the game if there is enough clients
   while (!(client->isInGame)) {
+
+    // int indexclient = verifyNbClients2(client->idClient);
+    // if (indexclient >= 0) {
+    //   initGame2(tabClients[indexclient], client, gameInfo);
+    // }
+
     otherClientAddr = verifyNbClients(client->idClient);
     if (otherClientAddr != NULL) {
       gameInfo = initGame(otherClientAddr, client);
     }
   }
 
-  if (gameInfo == NULL) {
-    perror("No game initialized");
-  } else { // sendind the game ID to tell the client the game has started
-    dataToSend->currentBet = 0;
-    dataToSend->moneyGainLost = 0;
-    dataToSend->cooperate = NULL; // 1 collaborer     0 trahir
-    dataToSend->totalMoney = 0;
-    dataToSend->iDGame = gameInfo->idGame;
-    dataToSend->gameEnded = NULL;
-    write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
-  }
-  // #if DEBUG
-  bool cooperate; // 1 collaborer     0 trahir
-  unsigned long totalMoney;
-  int iDGame;
-  bool gameEnded;
+  gameInfo->client1->idClient = 10;
+  // if (!gameInfo)
+  //   perror("Error :No game initialized");
+  gameInfo->idGame = 5;
+  gameInfo->c2NbTreason = 5;
+  gameInfo->client1->idClient = 10;
+
+  // sendind the game ID to tell the client the game has started
+  dataToSend->currentBet = 0;
+  dataToSend->moneyGainLost = 0;
+  dataToSend->cooperate = NULL; // 1 collaborer     0 trahir
+  dataToSend->totalMoney = 0;
+  dataToSend->iDGame = gameInfo->idGame;
+  dataToSend->gameEnded = NULL;
+  write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
+
+#if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
-  printf("CurrentBet: %d \n", dataToSend->currentBet);
-  printf("Money Lost: %d \n", dataToSend->moneyGainLost);
+  printf("CurrentBet: %lu \n", dataToSend->currentBet);
+  printf("Money Lost: %lu \n", dataToSend->moneyGainLost);
   printf("Choice: %d \n", dataToSend->cooperate);
-  printf("TotalMoney: %d \n", dataToSend->totalMoney);
+  printf("TotalMoney: %lu \n", dataToSend->totalMoney);
   printf("IDGame: %d \n", dataToSend->iDGame);
-  printf("Game Ended ? %d", dataToSend->gameEnded);
+  printf("Game Ended ? %d\n", dataToSend->gameEnded);
   printf("----------------------------------------------------------------\n");
   // #endif
 
   while (!hasGameEnded) {
     read(connection->sockfd, dataRecieved, (sizeof(dataSentReceived)));
 #if DEBUG
-    bool cooperate; // 1 collaborer     0 trahir
-    unsigned long totalMoney;
-    int iDGame;
-    bool gameEnded;
     printf(
         "DEBUG-----------------------------------------------------------\n");
     printf("Data Received:\n");
-    printf("CurrentBet: %d \n", dataToSend->currentBet);
-    printf("Money Lost: %d \n", dataToSend->moneyGainLost);
-    printf("Choice: %d \n", dataToSend->cooperate);
-    printf("TotalMoney: %d \n", dataToSend->totalMoney);
-    printf("IDGame: %d \n", dataToSend->iDGame);
-    printf("Game Ended ? %d", dataToSend->gameEnded);
+    printf("CurrentBet: %lu \n", dataRecieved->currentBet);
+    printf("Money Lost: %lu \n", dataRecieved->moneyGainLost);
+    printf("Choice: %d \n", dataRecieved->cooperate);
+    printf("TotalMoney: %lu \n", dataRecieved->totalMoney);
+    printf("IDGame: %d \n", dataRecieved->iDGame);
+    printf("Game Ended ? %d\n", dataRecieved->gameEnded);
     printf(
         "----------------------------------------------------------------\n");
 #endif
@@ -303,15 +319,15 @@ void *threadServeur(void *ptr) {
 
     write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
-  // #if DEBUG
+#if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
-  printf("CurrentBet: %lu \n", dataRecieved->currentBet);
-  printf("Money Lost: %lu \n", dataRecieved->moneyGainLost);
-  printf("Choice: %d \n", dataRecieved->cooperate);
-  printf("TotalMoney: %lu \n", dataRecieved->totalMoney);
-  printf("IDGame: %d \n", dataRecieved->iDGame);
-  printf("Game Ended ? %d", dataRecieved->gameEnded);
+  printf("CurrentBet: %lu \n", dataToSend->currentBet);
+  printf("Money Lost: %lu \n", dataToSend->moneyGainLost);
+  printf("Choice: %d \n", dataToSend->cooperate);
+  printf("TotalMoney: %lu \n", dataToSend->totalMoney);
+  printf("IDGame: %d \n", dataToSend->iDGame);
+  printf("Game Ended ? %d\n", dataToSend->gameEnded);
   printf("----------------------------------------------------------------\n");
   // #endif
   // saving on file, but only if the client's ID is an odd number
