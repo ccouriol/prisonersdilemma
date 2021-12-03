@@ -43,7 +43,6 @@ typedef struct {
   struct sockaddr address;
   int addr_len;
   int index;
-  struct clientStructure client;
 } connection_t;
 
 typedef struct gameStructure {
@@ -56,10 +55,10 @@ typedef struct gameStructure {
   clientStructure *client2;
 } gameStructure;
 
-typedef struct dataSentReceived{
+typedef struct dataSentReceived {
   unsigned long currentBet;
   unsigned long moneyGainLost;
-  bool cooperate;  //1 collaborer     0 trahir
+  bool cooperate; // 1 collaborer     0 trahir
   unsigned long totalMoney;
   int iDGame;
   bool gameEnded;
@@ -69,10 +68,13 @@ void init_sockets_array();
 void add(connection_t *connection);
 void del(connection_t *connection);
 void *threadProcess(void *ptr);
+void addclient(clientStructure *client);
 clientStructure *verifyNbClients(int clientID);
 gameStructure *initGame(clientStructure *client1, clientStructure *client2);
 void profitsCalculation(gameStructure *gameInfo);
 void saveOnfile(gameStructure *gameInfo);
+void computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
+                    gameStructure *gameInfo, dataSentReceived *dataToSend);
 void *threadServeur(void *ptr);
 
 int create_server_socket();
