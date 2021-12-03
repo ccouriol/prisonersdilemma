@@ -12,7 +12,7 @@ CFLAGS	:= -Wall -Wextra -Wshadow -Wdouble-promotion -Wformat=2 -Wconversion -g
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib I'd specify
 #   their path using -Lpath, something like:
-LFLAGS = -lpthread -lbinn
+LFLAGS = -lpthread
 
 # define output directory
 OUTPUT	:= ../../output
