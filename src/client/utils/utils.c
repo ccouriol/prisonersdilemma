@@ -14,6 +14,8 @@
 #include "../../../include/client/utils/utils.h"
 #include "../../../include/client/game/main.h"
 
+
+
 /*!
  * \fn void *threadProcess(void *ptr)
  * \author GABETTE Cédric
@@ -25,13 +27,13 @@
  */
 void *threadProcess(void *ptr) {
 
-  s_clientData *sending = malloc(sizeof(s_clientData));
-  s_clientData *receiving = malloc(sizeof(s_clientData));
-
   int sockfd = *((int *)ptr);
 
-  write(sockfd, sending, sizeof(s_clientData));
-  read(sockfd, receiving, sizeof(s_clientData));
+  dataSentReceived *sending = malloc(sizeof(dataSentReceived));
+  dataSentReceived *receiving = malloc(sizeof(dataSentReceived));
+
+  write(sockfd, sending, sizeof(dataSentReceived));
+  read(sockfd, receiving, sizeof(dataSentReceived));
 
   close(sockfd);
   puts("client pthread ended");
@@ -39,24 +41,6 @@ void *threadProcess(void *ptr) {
   return 0;
 }
 
-void *threadGame(void *ptr) {
-
-  c_clientInfo *infoReceiving = malloc(sizeof(c_clientInfo));
-  c_clientInfo *infoSending = malloc(sizeof(c_clientInfo));
-
-  int sockfd = *((int *)ptr);
-
-  read(sockfd, infoReceiving, sizeof(c_clientInfo));
-  write(sockfd, infoSending->idGame, sizeof(c_clientInfo));
-
-  printf("ID of the game is : %s\n", infoReceiving->idGame);
-  printf("Status of the game : %d\n", infoReceiving->gameLaunched);
-  
-  close(sockfd);
-  puts("client pthread ended");
-
-  return 0;
-}
 
 /*!
  * \fn int open_connection()
