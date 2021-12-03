@@ -262,7 +262,7 @@ void *threadServeur(void *ptr) {
     dataToSend->gameEnded = NULL;
     write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
-#if DEBUG
+  // #if DEBUG
   bool cooperate; // 1 collaborer     0 trahir
   unsigned long totalMoney;
   int iDGame;
@@ -276,7 +276,7 @@ void *threadServeur(void *ptr) {
   printf("IDGame: %d \n", dataToSend->iDGame);
   printf("Game Ended ? %d", dataToSend->gameEnded);
   printf("----------------------------------------------------------------\n");
-#endif
+  // #endif
 
   while (!hasGameEnded) {
     read(connection->sockfd, dataRecieved, (sizeof(dataSentReceived)));
@@ -303,21 +303,17 @@ void *threadServeur(void *ptr) {
 
     write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
-#if DEBUG
-  bool cooperate; // 1 collaborer     0 trahir
-  unsigned long totalMoney;
-  int iDGame;
-  bool gameEnded;
+  // #if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
-  printf("CurrentBet: %d \n", dataToSend->currentBet);
-  printf("Money Lost: %d \n", dataToSend->moneyGainLost);
-  printf("Choice: %d \n", dataToSend->cooperate);
-  printf("TotalMoney: %d \n", dataToSend->totalMoney);
-  printf("IDGame: %d \n", dataToSend->iDGame);
-  printf("Game Ended ? %d", dataToSend->gameEnded);
+  printf("CurrentBet: %lu \n", dataRecieved->currentBet);
+  printf("Money Lost: %lu \n", dataRecieved->moneyGainLost);
+  printf("Choice: %d \n", dataRecieved->cooperate);
+  printf("TotalMoney: %lu \n", dataRecieved->totalMoney);
+  printf("IDGame: %d \n", dataRecieved->iDGame);
+  printf("Game Ended ? %d", dataRecieved->gameEnded);
   printf("----------------------------------------------------------------\n");
-#endif
+  // #endif
   // saving on file, but only if the client's ID is an odd number
   if (connection->index % 2 == 0) {
     saveOnfile(gameInfo);

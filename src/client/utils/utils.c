@@ -26,13 +26,14 @@ void *threadProcess(void *ptr) {
 
   int len;
 
-  s_clientData *sending = malloc(sizeof(s_clientData));
-  s_clientData *receiving = malloc(sizeof(s_clientData));
+  dataSentReceived *sending = malloc(sizeof(dataSentReceived));
+  dataSentReceived *receiving = malloc(sizeof(dataSentReceived));
 
   int sockfd = *((int *)ptr);
+  sending->totalMoney = 500;
 
-  write(sockfd, sending, sizeof(s_clientData));
-  read(sockfd, receiving, sizeof(s_clientData));
+  write(sockfd, sending, sizeof(dataSentReceived));
+  read(sockfd, receiving, sizeof(dataSentReceived));
 
   close(sockfd);
   puts("client pthread ended");
@@ -40,24 +41,7 @@ void *threadProcess(void *ptr) {
   return 0;
 }
 
-void *threadGame(void *ptr) {
-
-  c_clientInfo *infoReceiving = malloc(sizeof(c_clientInfo));
-  c_clientInfo *infoSending = malloc(sizeof(c_clientInfo));
-
-  int sockfd = *((int *)ptr);
-
-  read(sockfd, infoReceiving, sizeof(c_clientInfo));
-  write(sockfd, infoSending->idGame, sizeof(c_clientInfo));
-
-  printf("ID of the game is : %s\n", infoReceiving->idGame);
-  printf("Status of the game : %d\n", infoReceiving->gameLaunched);
-
-  close(sockfd);
-  puts("client pthread ended");
-
-  return 0;
-}
+void *threadGame(void *ptr) { return 0; }
 
 /*!
  * \fn int open_connection()
@@ -102,7 +86,7 @@ int count = 0;
 int roundFunction() {
 
   void sendData();
-  
+
   if (count == ROUND_MAX) {
     puts("End of the game");
     exit(-1);
@@ -112,11 +96,11 @@ int roundFunction() {
 }
 
 void sendData(void *ptr) {
-  c_clientInfo *sending = malloc(sizeof(c_clientInfo));
+  dataSentReceived *sending = malloc(sizeof(dataSentReceived));
   int len;
   int sockfd = *((int *)ptr);
   puts("End of round, sending data");
-  len = write(sockfd, sending, sizeof(s_clientData));
-    if (len < 0)
-      perror("Cannot send data");
+  len = write(sockfd, sending, sizeof(dataSentReceived));
+  if (len < 0)
+    perror("Cannot send data");
 }

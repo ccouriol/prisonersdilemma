@@ -29,9 +29,14 @@ typedef struct {
   bool cooperate;
 } s_clientData;
 
-typedef struct {
-  char idGame[50];
-  bool gameLaunched;
-} c_clientInfo;
+typedef struct dataSentReceived {
+  unsigned long currentBet;
+  unsigned long moneyGainLost;
+  bool cooperate; // 1 collaborer     0 trahir
+  unsigned long totalMoney;
+  int iDGame;
+  bool gameEnded;
+} dataSentReceived;
+
 
 #endif // MAIN_H

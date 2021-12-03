@@ -116,15 +116,11 @@ int main(int argc, char **argv) {
   GtkWidget *win;
   int game = 0;
   int sockfd;
-  char msg[100];
+  int oui;
   pthread_t thread;
 
   sockfd = open_connection();
-
-  strcpy(msg, "Hello from Player1");
-  printf("sending : %s\n", msg);
-  write(sockfd, msg, strlen(msg));
-
+  puts("Client alive");
   // phthread created for reading
   pthread_create(&thread, 0, threadProcess, &sockfd);
   pthread_detach(thread);
