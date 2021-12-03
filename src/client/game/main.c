@@ -15,6 +15,7 @@
 
 GtkBuilder *builder = NULL;
 int time_remaining = 10;
+int end = 0;
 s_clientData clientData;
 dataSentReceived *sending;
 dataSentReceived *receiving;
@@ -43,6 +44,22 @@ void on_window_main_destroy() {
 */
 int start_countdown() {
   // puts("Timer started");
+   
+
+  if(time_remaining == 0) {
+    printf("Round %d\n",end); 
+    if(end == 3) {
+      gtk_main_quit();
+    }
+
+    end++;
+    time_remaining = 10;
+    sendData();
+    g_timeout_add(1000, start_countdown, NULL);
+    return 0;
+  } 
+
+  
   if (time_remaining > 0) {
     time_remaining--;
     char timer_text[5];
@@ -53,9 +70,7 @@ int start_countdown() {
     snprintf(timer_text, 5, "%i", time_remaining);
     gtk_label_set_text(timelabel, timer_text);
   }
-
-  printf("Round %d\n", roundFunction());
-
+  
   return 1;
 }
 
@@ -127,7 +142,7 @@ void start_gtk_gui(int *ac, char ***av) {
 
   gtk_builder_connect_signals(builder, NULL);
   gtk_widget_show(win);
-  if (time_remaining > 0) {
+  if (time_remaining >= 0) {
     g_timeout_add(1000, (GSourceFunc)start_countdown, NULL);
     start_countdown();
   }
@@ -153,6 +168,9 @@ void *threadGame(void *ptr) {
 
 int sockfd = *((int *)ptr);
 
+receiving = malloc(sizeof(dataSentReceived));
+sending = malloc(sizeof(dataSentReceived));
+
   for (int i = 0; i == ROUND_MAX; i++) {
     if (time_remaining == 0) {
       sending->cooperate = clientData.cooperate;
@@ -162,7 +180,14 @@ int sockfd = *((int *)ptr);
       write(sockfd, sending, sizeof(dataSentReceived));
     }
   }
-
+  
+  int i=0;
+  while(i < 100) {
+    printf("GAME %d\n", i);
+    i++;
+  }
+  
+  return 0;
 }
 
 
@@ -181,21 +206,27 @@ int sockfd = *((int *)ptr);
 int main(int argc, char **argv) {
   int sockfd;
   pthread_t thread;
-
+  receiving = malloc(sizeof(dataSentReceived));
   sockfd = open_connection();
   puts("Client is alive");
 
   // phthread created for reading
   pthread_create(&thread, 0, threadProcess, &sockfd);
-  pthread_detach(thread);
-
-  if (receiving->gameLaunched == 1) {
-    start_gtk_gui(&argc, &argv);
-  }
+  
 
   // phthread created to launch the GUI
   pthread_create(&thread, 0, threadGame, &sockfd);
+
   pthread_detach(thread);
- 
+  pthread_join(thread, NULL);
+  
+  if (receiving->gameLaunched == 1) {
+  start_gtk_gui(&argc, &argv);
+  }
+
+  puts("ALIVE");
+  
+  
+
   return (EXIT_SUCCESS);
 }

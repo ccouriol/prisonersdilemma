@@ -18,10 +18,8 @@
 
 
 void *threadProcess(void *ptr);
-// void *threadGame(void *ptr);
+void *threadGame(void *ptr);
 int open_connection();
-int roundFunction();
-void sendData();
 
 typedef struct {
   unsigned long currentBet;
@@ -45,9 +43,6 @@ typedef struct dataSentReceived {
   int gameLaunched;
   bool gameEnded;
 } dataSentReceived;
-
-
-
 
 
 #endif // MAIN_H

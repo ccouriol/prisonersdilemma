@@ -286,7 +286,7 @@ void *threadServeur(void *ptr) {
   dataToSend->gameEnded = NULL;
   write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
 
-#if DEBUG
+// #if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
   printf("CurrentBet: %lu \n", dataToSend->currentBet);
@@ -300,7 +300,7 @@ void *threadServeur(void *ptr) {
 
   while (!hasGameEnded) {
     read(connection->sockfd, dataRecieved, (sizeof(dataSentReceived)));
-#if DEBUG
+// #if DEBUG
     printf(
         "DEBUG-----------------------------------------------------------\n");
     printf("Data Received:\n");
@@ -312,14 +312,14 @@ void *threadServeur(void *ptr) {
     printf("Game Ended ? %d\n", dataRecieved->gameEnded);
     printf(
         "----------------------------------------------------------------\n");
-#endif
+// #endif
 
     hasGameEnded = dataRecieved->gameEnded;
     computeAndSend(client, dataRecieved, gameInfo, dataToSend);
 
     write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
-#if DEBUG
+// #if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
   printf("CurrentBet: %lu \n", dataToSend->currentBet);
