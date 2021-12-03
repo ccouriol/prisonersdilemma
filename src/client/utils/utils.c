@@ -11,7 +11,10 @@
  */
 
 /*! Importation of librairies*/
+#include "../../../include/client/utils/utils.h"
 #include "../../../include/client/game/main.h"
+
+
 
 /*!
  * \fn void *threadProcess(void *ptr)
@@ -24,13 +27,10 @@
  */
 void *threadProcess(void *ptr) {
 
-  int len;
+  int sockfd = *((int *)ptr);
 
   dataSentReceived *sending = malloc(sizeof(dataSentReceived));
   dataSentReceived *receiving = malloc(sizeof(dataSentReceived));
-
-  int sockfd = *((int *)ptr);
-  sending->totalMoney = 500;
 
   write(sockfd, sending, sizeof(dataSentReceived));
   read(sockfd, receiving, sizeof(dataSentReceived));
@@ -41,7 +41,6 @@ void *threadProcess(void *ptr) {
   return 0;
 }
 
-void *threadGame(void *ptr) { return 0; }
 
 /*!
  * \fn int open_connection()
@@ -81,26 +80,33 @@ int open_connection() {
   return sockfd;
 }
 
-int count = 0;
+/*!
+ * \fn int verifyIP(char *string_ip)
+ * \author Clément Couriol
+ * \version 0.1
+ * \date  01/12/2021
+ * \brief Returns 0 if the ip is valid, 1 if not
+ * \remarks None
+ * \param string_ip
+ * \return
+ */
+int verifyIP(char *string_ip) {
+  regex_t regex;
+  int reti;
+  char *rgx = "^(\\b25[0-5]|\\b2[0-4][0-9]|\\b[01]?[0-9][0-9]?)(\\.(25[0-5]|2["
+              "0-4][0-9]|[01]?[0-9][0-9]?)){3}$";
 
-int roundFunction() {
+  reti = regcomp(&regex, rgx, REG_EXTENDED);
+  if (reti)
+    return EXIT_FAILURE;
 
-  void sendData();
+  reti = regexec(&regex, string_ip, 0, NULL, 0);
+  if (!reti)
+    return EXIT_SUCCESS;
+  else if (reti == REG_NOMATCH)
+    return EXIT_FAILURE;
+  else
+    return EXIT_FAILURE;
 
-  if (count == ROUND_MAX) {
-    puts("End of the game");
-    exit(-1);
-  }
-  count++;
-  return count;
-}
-
-void sendData(void *ptr) {
-  dataSentReceived *sending = malloc(sizeof(dataSentReceived));
-  int len;
-  int sockfd = *((int *)ptr);
-  puts("End of round, sending data");
-  len = write(sockfd, sending, sizeof(dataSentReceived));
-  if (len < 0)
-    perror("Cannot send data");
+  regfree(&regex);
 }

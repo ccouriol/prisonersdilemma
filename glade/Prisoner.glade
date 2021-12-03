@@ -172,11 +172,11 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkLabel" id="current_bet_label">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="ypad">5</property>
-            <property name="label" translatable="yes">0 €</property>
+            <property name="label" translatable="yes">0</property>
             <attributes>
               <attribute name="weight" value="bold"/>
             </attributes>

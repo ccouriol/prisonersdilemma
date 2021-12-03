@@ -16,8 +16,9 @@
 #define BUFFERSIZE 2048
 #define ROUND_MAX 3
 
+
 void *threadProcess(void *ptr);
-void *threadGame(void *ptr);
+// void *threadGame(void *ptr);
 int open_connection();
 int roundFunction();
 void sendData();
@@ -29,14 +30,24 @@ typedef struct {
   bool cooperate;
 } s_clientData;
 
+typedef struct {
+  int iDGame;
+  bool gameLaunched;
+} c_clientInfo;
+
+//TODO Envoyer depuis le serveur une valeur pour dire que le jeu est lancé (int gameLaunched = 1)
 typedef struct dataSentReceived {
   unsigned long currentBet;
   unsigned long moneyGainLost;
   bool cooperate; // 1 collaborer     0 trahir
   unsigned long totalMoney;
   int iDGame;
+  int gameLaunched;
   bool gameEnded;
 } dataSentReceived;
+
+
+
 
 
 #endif // MAIN_H
