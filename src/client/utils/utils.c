@@ -11,7 +11,6 @@
  */
 
 /*! Importation of librairies*/
-#include "../../../include/client/utils/utils.h"
 #include "../../../include/client/game/main.h"
 
 /*!
@@ -24,64 +23,40 @@
  * \param ptr
  */
 void *threadProcess(void *ptr) {
-  // Il faut réserver un espace mémoire pour les structures d'échanges
-  char buffer_in[BUFFERSIZE];
-  char buffer_out[BUFFERSIZE];
-  testStruct *envoie = malloc(sizeof(testStruct));
-  testStruct *received = malloc(sizeof(testStruct));
+
+  int len;
+
+  s_clientData *sending = malloc(sizeof(s_clientData));
+  s_clientData *receiving = malloc(sizeof(s_clientData));
 
   int sockfd = *((int *)ptr);
 
-  /*Remplissage de la structure*/
-  envoie->coop = false;
-  envoie->chiffre = 159;
-  strcat(envoie->msg, "Message de client");
-
-  // On lit sur le flux d'entrée
-  //            socket - structure de réception - taille
-  read(sockfd, received, sizeof(testStruct));
-
-  printf("%s\n", received->msg);
-  printf("%d\n", received->chiffre);
-  printf("%d\n", received->coop);
-
-  // On écrit la structure sans passer par référence sur le flux de sortie
-  write(sockfd, envoie, sizeof(testStruct));
+  write(sockfd, sending, sizeof(s_clientData));
+  read(sockfd, receiving, sizeof(s_clientData));
 
   close(sockfd);
+  puts("client pthread ended");
+
+  return 0;
 }
 
-/*!
- * \fn void *threadIsGame(void *ptr)
- * \author GABETTE Cédric
- * \version 0.1
- * \date  26/11/2021
- * \brief Thread for collecting the id of the game and acknowledge it to the
- * server \remarks None \param ptr
- */
-void *threadIsGame(void *ptr) {
-  char buffer_in[BUFFERSIZE];
-  char buffer_out[BUFFERSIZE];
-  char idGame[BUFFERSIZE];
-  char IsGame;
-  char ask = '?';
-  long int len;
+void *threadGame(void *ptr) {
+
+  c_clientInfo *infoReceiving = malloc(sizeof(c_clientInfo));
+  c_clientInfo *infoSending = malloc(sizeof(c_clientInfo));
+
   int sockfd = *((int *)ptr);
 
-  while ((len = read(sockfd, buffer_in, BUFFERSIZE)) != 0) {
-    if (recv(sockfd, idGame, BUFFERSIZE, 0) < 0) {
-      puts("recv failed");
-    }
-    puts("replied recieved");
-  }
+  read(sockfd, infoReceiving, sizeof(c_clientInfo));
+  write(sockfd, infoSending->idGame, sizeof(c_clientInfo));
 
-  if (send(sockfd, idGame, strlen(idGame), 0) < 0) {
-    puts("Send failed");
-  }
-  puts("Send recieved");
+  printf("ID of the game is : %s\n", infoReceiving->idGame);
+  printf("Status of the game : %d\n", infoReceiving->gameLaunched);
 
   close(sockfd);
-  printf("client pthread ended, len=%ld\n", len);
+  puts("client pthread ended");
+
+  return 0;
 }
 
 /*!
@@ -118,7 +93,30 @@ int open_connection() {
     puts("Fail to connect to server");
     exit(-1);
   };
-  puts("connecté");
 
   return sockfd;
+}
+
+int count = 0;
+
+int roundFunction() {
+
+  void sendData();
+  
+  if (count == ROUND_MAX) {
+    puts("End of the game");
+    exit(-1);
+  }
+  count++;
+  return count;
+}
+
+void sendData(void *ptr) {
+  c_clientInfo *sending = malloc(sizeof(c_clientInfo));
+  int len;
+  int sockfd = *((int *)ptr);
+  puts("End of round, sending data");
+  len = write(sockfd, sending, sizeof(s_clientData));
+    if (len < 0)
+      perror("Cannot send data");
 }

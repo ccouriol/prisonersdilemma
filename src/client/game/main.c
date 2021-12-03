@@ -12,8 +12,7 @@
 
 /*! Importation of librairies*/
 #include "../../../include/client/game/main.h"
-#include "../../../include/client/utils/utils.h"
-#include "../network/network.c"
+
 GtkBuilder *builder = NULL;
 int time_remaining = 10;
 s_clientData clientData;
@@ -52,18 +51,20 @@ int start_countdown() {
     snprintf(timer_text, 100, "%i", time_remaining);
     gtk_label_set_text(timelabel, timer_text);
   }
+
+  printf("Round %d\n", roundFunction());
+
   return 1;
 }
 
 /*!
- * \fn void on_bet_clicked(GtkWidget *widget, gpointer data)
+ * \fn void on_bet_clicked(GtkWidget *widget)
  * \author Clément Couriol
  * \version 0.1
  * \date  24/11/2021
  * \brief Function called when user click on a bet button
  * \remarks None
  * \param widget
- * \param data
  */
 void on_bet_clicked(GtkWidget *widget) {
   GtkButton *btn = GTK_BUTTON(widget);
@@ -79,14 +80,13 @@ void on_bet_clicked(GtkWidget *widget) {
 }
 
 /*!
- * \fn void on_action_clicked(GtkWidget *widget, gpointer userdata)
+ * \fn void on_action_clicked(GtkWidget *widget)
  * \author Clément Couriol
  * \version 0.1
  * \date  24/11/2021
  * \brief Function called when user click on coop or betray button
  * \remarks None
  * \param widget
- * \param userdata
  */
 void on_action_clicked(GtkWidget *widget) {
   GtkButton *btn = GTK_BUTTON(widget);
@@ -112,39 +112,53 @@ void on_action_clicked(GtkWidget *widget) {
  * \param *argv
  * \return 0 if all went good
  */
-
 int main(int argc, char **argv) {
   GtkWidget *win;
-
+  int game = 0;
   int sockfd;
-  long int status = 0;
   char msg[100];
   pthread_t thread;
 
   sockfd = open_connection();
 
+  strcpy(msg, "Hello from Player1");
+  printf("sending : %s\n", msg);
+  write(sockfd, msg, strlen(msg));
+
+  // phthread created for reading
   pthread_create(&thread, 0, threadProcess, &sockfd);
-  // write(connection->sock,"Main APP Still running",15);
   pthread_detach(thread);
 
-  // phthread created to launch the game
-  // pthread_create(&thread, 0, threadIsGame, &sockfd);
-  // // write(connection->sock, "<IdGame>")
-  // pthread_detach(thread);
+  // phthread created to launch the GUI
+  pthread_create(&thread, 0, threadGame, &sockfd);
+  pthread_detach(thread);
 
-  gtk_init(&argc, &argv);
-  clientData.baseMoney = 500;
-  // builder = gtk_builder_new_from_file("./glade/Interface.glade");
-  // win = GTK_WIDGET(gtk_builder_get_object(builder, "app_win"));
-  builder = gtk_builder_new_from_file("./glade/Prisoner.glade");
-  win = GTK_WIDGET(gtk_builder_get_object(builder, "app_prisoner"));
+  printf("game --> %d", game);
 
-  gtk_builder_connect_signals(builder, NULL);
-  gtk_widget_show(win);
-  if (time_remaining > 0) {
-    g_timeout_add(1000, (GSourceFunc)start_countdown, NULL);
-    start_countdown();
+  while (1) {
+    read(sockfd, game, sizeof(int));
+    if (game == 1) {
+      break;
+    }
   }
-  gtk_main();
-  return (EXIT_SUCCESS);
+  if (game == 1) {
+
+    puts("Game is launched !");
+
+    gtk_init(&argc, &argv);
+    clientData.baseMoney = 500;
+    builder = gtk_builder_new_from_file("./glade/Interface.glade");
+    win = GTK_WIDGET(gtk_builder_get_object(builder, "app_win"));
+    builder = gtk_builder_new_from_file("./glade/Prisoner.glade");
+    win = GTK_WIDGET(gtk_builder_get_object(builder, "app_prisoner"));
+
+    gtk_builder_connect_signals(builder, NULL);
+    gtk_widget_show(win);
+    if (time_remaining > 0) {
+      g_timeout_add(1000, (GSourceFunc)start_countdown, NULL);
+      start_countdown();
+    }
+    gtk_main();
+    return (EXIT_SUCCESS);
+  }
 }

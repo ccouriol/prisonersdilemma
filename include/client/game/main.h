@@ -14,11 +14,13 @@
 #define MAIN_H
 
 #define BUFFERSIZE 2048
+#define ROUND_MAX 3
 
 void *threadProcess(void *ptr);
-void *threadIsGame(void *ptr);
-
+void *threadGame(void *ptr);
 int open_connection();
+int roundFunction();
+void sendData();
 
 typedef struct {
   unsigned long currentBet;
@@ -27,10 +29,9 @@ typedef struct {
   bool cooperate;
 } s_clientData;
 
-typedef struct TestStruct {
-  char msg[200];
-  bool coop;
-  int chiffre;
-} testStruct;
+typedef struct {
+  char idGame[50];
+  bool gameLaunched;
+} c_clientInfo;
 
-#endif /* MAIN_H */
+#endif // MAIN_H
