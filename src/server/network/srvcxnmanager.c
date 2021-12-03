@@ -248,7 +248,7 @@ void *threadServeur(void *ptr) {
     data->currentBet=clientAddr->sommePariée;
   }
 
-  // TODO: inclure calculs gains
+  
 
   // ecriture sur fichier avant fermeture
   close(connection->sockfd);
@@ -303,6 +303,6 @@ void ecritureResultats(/*struct machin*/) {
   // appelée à la fin de la partie avant la fermeture du thread.
 }
 
-// TODO: inclure calculs gains dans la boucle
+
 // TODO: ouverture/fermeture fichier pour sauvegarde scores
 // TESTER envois C/S et S/C avec des structures
