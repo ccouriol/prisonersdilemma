@@ -75,9 +75,7 @@ int create_server_socket() {
 clientStructure *verifyNbClients(int clientID) {
 
   clientStructure *ret = NULL;
-
   ret = malloc(sizeof(clientStructure));
-
   if (ret == NULL) {
     perror("Error initialazing client pointer");
     exit(-3);
@@ -103,14 +101,19 @@ gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
     exit(-3);
   }
 
+  game->client1 = client1;
+  game->client2 = client2;
+  game->c1NbCollab = 0;
+  game->c1NbTreason = 0;
+  game->c2NbCollab = 0;
+  game->c2NbTreason = 0;
+
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (games[i] == NULL && client1 != NULL && client2 != NULL) {
-      games[i] = game;
-      games[i]->client1 = client1;
-      games[i]->client2 = client2;
-      games[i]->idPartie = i;
+      game->idGame = i;
       client1->isInGame = true;
       client2->isInGame = true;
+      games[i] = game;
       return game;
     }
   }
@@ -119,75 +122,77 @@ gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
 }
 
 void profitsCalculation(gameStructure *gameInfo) {
-    clientStructure *client1 = &(gameInfo.client1);
-    clientStructure *client2 = &(gameInfo.client2);
 
-    //On retire les sommes pariées des pactoles
-    client1.money -= client1.bet;
-    client2.money -= client1.bet;
-    gameInfo->client1->pactole-=gameInfo->client1->sommePariée;
-    gameInfo->client2->pactole-=gameInfo->client2->sommePariée;
+  clientStructure *client1 = gameInfo->client1;
+  clientStructure *client2 = gameInfo->client2;
 
-    //If they both betray they gain half their bet
-    if (client1.cooperate == 0 && client2.cooperate == client1.cooperate ){  
-      client1.money += client1.bet/2;
-      client2.money += client1.bet/2;   
-      gameInfo->client1->pactole+=gameInfo->client1->sommePariée/2;    
-      gameInfo->client2->pactole+=gameInfo->client2->sommePariée/2;
+  // On retire les sommes pariées des pactoles
+  client1->money -= client1->bet;
+  client2->money -= client1->bet;
+  gameInfo->client1->money -= gameInfo->client1->bet;
+  gameInfo->client2->money -= gameInfo->client2->bet;
 
-      gameInfo->c1NbTreason += 1;
-      gameInfo->c2NbTreason += 1;
-    }  
-    //If C1 betray C2, C1 gain C2's bet
-    else if (client1.cooperate == 0 && client2.cooperate == 1){
-      client1.money += client2.bet;
-      gameInfo->client1->pactole+=gameInfo->client2->sommePariée; 
+  // If they both betray they gain half their bet
+  if (client1->cooperate == 0 && client2->cooperate == client1->cooperate) {
+    client1->money += client1->bet / 2;
+    client2->money += client1->bet / 2;
+    gameInfo->client1->money += gameInfo->client1->bet / 2;
+    gameInfo->client2->money += gameInfo->client2->bet / 2;
 
-      gameInfo->c1NbTreason += 1;
-      gameInfo->c2NbCollab += 1;
-    }
-    //If C2 betray C12, C2 gain C1's bet
-    else if (client1.cooperate == 1 && client2.cooperate == 0){
-      client2.money +=client1.bet;
+    gameInfo->c1NbTreason += 1;
+    gameInfo->c2NbTreason += 1;
+  }
+  // If C1 betray C2, C1 gain C2's bet
+  else if (client1->cooperate == 0 && client2->cooperate == 1) {
+    client1->money += client2->bet;
+    gameInfo->client1->money += gameInfo->client2->bet;
 
-      gameInfo->client2->pactole+=gameInfo->client1->sommePariée;
+    gameInfo->c1NbTreason += 1;
+    gameInfo->c2NbCollab += 1;
+  }
+  // If C2 betray C12, C2 gain C1's bet
+  else if (client1->cooperate == 1 && client2->cooperate == 0) {
+    client2->money += client1->bet;
 
-      gameInfo->c1NbCollab+=1;
-      gameInfo->c2NbTreason+=1;
-    }
-    //If they both collaborate
-    else {
-      client1.money += client1.bet;
-      client2.money += client2.bet;
+    gameInfo->client2->money += gameInfo->client1->bet;
 
-      gameInfo->client1->pactole+=gameInfo->client1->sommePariée;    
-      gameInfo->client2->pactole+=gameInfo->client2->sommePariée;
+    gameInfo->c1NbCollab += 1;
+    gameInfo->c2NbTreason += 1;
+  }
+  // If they both collaborate
+  else {
+    client1->money += client1->bet;
+    client2->money += client2->bet;
 
-      gameInfo->c1NbCollab+=1;
-      gameInfo->c2NbCollab+=1;
-    }
+    gameInfo->client1->money += gameInfo->client1->bet;
+    gameInfo->client2->money += gameInfo->client2->bet;
+
+    gameInfo->c1NbCollab += 1;
+    gameInfo->c2NbCollab += 1;
+  }
 }
 
-//TODO: upgrade for a better filename
-void saveOnfile(gameStructure *gameInfo){
+// TODO: upgrade for a better filename
+void saveOnfile(gameStructure *gameInfo) {
 
   FILE *fich;
   int nbTotalTreason = gameInfo->c1NbTreason + gameInfo->c2NbTreason;
   int nbTotalCollab = gameInfo->c1NbCollab + gameInfo->c2NbCollab;
 
-
   fich = fopen("NOMFICH", "a");
-  if(fich == NULL){
-    perror("error opening file \n"); 
+  if (fich == NULL) {
+    perror("error opening file \n");
     exit(EXIT_FAILURE);
   }
 
   fseek(fich, 0, SEEK_END);
 
-  fprintf(fich, "Game number: %d", games.);
-  fprintf(fich, "Number of collaboration for player 1: %d", gameInfo->c1NbCollab);
+  fprintf(fich, "Game number: %d", gameInfo->idGame);
+  fprintf(fich, "Number of collaboration for player 1: %d",
+          gameInfo->c1NbCollab);
   fprintf(fich, "Number of treason for player 1: %d", gameInfo->c1NbTreason);
-  fprintf(fich, "Number of collaboration for player 2: %d", gameInfo->c2NbCollab);
+  fprintf(fich, "Number of collaboration for player 2: %d",
+          gameInfo->c2NbCollab);
   fprintf(fich, "Number of treason for player 2: %d", gameInfo->c2NbTreason);
 
   fprintf(fich, "Total number of treason: %d", nbTotalTreason);
@@ -201,7 +206,7 @@ void *threadServeur(void *ptr) {
   char buffer_in[BUFFERSIZE];
   char buffer_out[BUFFERSIZE];
 
-  //creation of the buffer to receive and send data
+  // creation of the buffer to receive and send data
   dataSentReceived *dataRecieved = malloc(sizeof(dataSentReceived));
   dataSentReceived *dataToSend = malloc(sizeof(dataSentReceived));
 
@@ -211,7 +216,7 @@ void *threadServeur(void *ptr) {
   clientStructure *otherClientAddr;
   gameStructure *gameInfo = NULL;
   connection_t *connection;
-  
+
   if (!ptr)
     pthread_exit(0);
   connection = (connection_t *)ptr;
@@ -234,35 +239,36 @@ void *threadServeur(void *ptr) {
 
   if (gameInfo == NULL) {
     perror("No game initialized");
-  }else{//sendind the game ID to tell the client the game has started
+  } else { // sendind the game ID to tell the client the game has started
     dataToSend->iDGame = gameInfo->idGame;
     write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
 
-  while(!hasGameEnded){
+  while (!hasGameEnded) {
     read(connection->sockfd, buffer_in, (sizeof(dataSentReceived)));
     dataRecieved = buffer_in;
     memset(buffer_in, 0, sizeof(buffer_in));
-    hasGameEnded = dataRecieved.gameEnded;
+    hasGameEnded = dataRecieved->gameEnded;
 
     // Reception and filling of the client structure
     connection->client.money = dataRecieved->totalMoney;
-    connection->client.choice = dataRecieved.cooperate;
+    connection->client.cooperate = dataRecieved->cooperate;
     connection->client.bet = dataRecieved->currentBet;
 
-  // puis traitement et renvoi
+    // puis traitement et renvoi
     profitsCalculation(gameInfo);
     dataToSend->totalMoney = connection->client.money;
-    dataToSend->cooperate = connection->client.choice;
+    dataToSend->cooperate = connection->client.cooperate;
     dataToSend->currentBet = connection->client.bet;
-    if(gameInfo->client1->idClient == connection->client.idClient){
+    if (gameInfo->client1->idClient == connection->client.idClient) {
       dataToSend->moneyGainLost = gameInfo->client1->bet;
-    }else dataToSend->moneyGainLost = gameInfo->client2->bet;
+    } else
+      dataToSend->moneyGainLost = gameInfo->client2->bet;
 
-    write(connection->sockfd,dataToSend, sizeof(dataSentReceived));
+    write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
-  //saving on file, but only if the client's ID is an odd number
-  if(connection->index %2 == 0){
+  // saving on file, but only if the client's ID is an odd number
+  if (connection->index % 2 == 0) {
     saveOnfile(gameInfo);
   }
 
@@ -276,5 +282,5 @@ void *threadServeur(void *ptr) {
   pthread_exit(0);
 }
 
-//TODO: upgrade dor a better filename and location
-//TODO: functions descriptor
+// TODO: upgrade for a better filename and location
+// TODO: functions descriptor
