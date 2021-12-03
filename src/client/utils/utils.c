@@ -11,6 +11,7 @@
  */
 
 /*! Importation of librairies*/
+#include "../../../include/client/utils/utils.h"
 #include "../../../include/client/game/main.h"
 
 /*!
@@ -93,4 +94,35 @@ int open_connection() {
   };
 
   return sockfd;
+}
+
+/*!
+ * \fn int verifyIP(char *string_ip)
+ * \author Clément Couriol
+ * \version 0.1
+ * \date  01/12/2021
+ * \brief Returns 0 if the ip is valid, 1 if not
+ * \remarks None
+ * \param string_ip
+ * \return
+ */
+int verifyIP(char *string_ip) {
+  regex_t regex;
+  int reti;
+  char *rgx = "^(\\b25[0-5]|\\b2[0-4][0-9]|\\b[01]?[0-9][0-9]?)(\\.(25[0-5]|2["
+              "0-4][0-9]|[01]?[0-9][0-9]?)){3}$";
+
+  reti = regcomp(&regex, rgx, REG_EXTENDED);
+  if (reti)
+    return EXIT_FAILURE;
+
+  reti = regexec(&regex, string_ip, 0, NULL, 0);
+  if (!reti)
+    return EXIT_SUCCESS;
+  else if (reti == REG_NOMATCH)
+    return EXIT_FAILURE;
+  else
+    return EXIT_FAILURE;
+
+  regfree(&regex);
 }
