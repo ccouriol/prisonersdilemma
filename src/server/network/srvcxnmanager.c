@@ -2,6 +2,7 @@
 
 connection_t *connections[MAXSIMULTANEOUSCLIENTS];
 gameStructure *games[MAXSIMULTANEOUSCLIENTS];
+clientStructure *clients[MAXSIMULTANEOUSCLIENTS];
 
 void init_sockets_array() {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
@@ -30,81 +31,7 @@ void del(connection_t *connection) {
   perror("Connection not in pool ");
   exit(-5);
 }
-/*
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_lock(&lock);
-pthread_mutex_unlock(&lock);
- */
 
-/**
- * Thread allowing server to handle multiple client connections
- * @param ptr connection_t
- * @return
- *//*
-void *threadProcess(void *ptr) {
-  char buffer_in[BUFFERSIZE];
-  char buffer_out[BUFFERSIZE];
-
-  int len;
-  connection_t *connection;
-
-  if (!ptr)
-    pthread_exit(0);
-  connection = (connection_t *)ptr;
-  printf("New incoming connection \n");
-
-  add(connection);
-
-  // Welcome the new client
-  printf("Welcome #%i\n", connection->index);
-  sprintf(buffer_out, "Welcome #%i\n", connection->index);
-  write(connection->sockfd, buffer_out, strlen(buffer_out));
-
-  while ((len = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
-
-    if (strncmp(buffer_in, "bye", 3) == 0) {
-      break;
-    }
-#if DEBUG
-    printf(
-        "DEBUG-----------------------------------------------------------\n");
-    printf("len : %i\n", len);
-    printf("Buffer : %.*s\n", len, buffer_in);
-    printf(
-        "----------------------------------------------------------------\n");
-#endif
-    strcpy(buffer_out, "\nServer Echo : ");
-    strncat(buffer_out, buffer_in, len);
-
-    if (buffer_in[0] == '@') {
-      for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-        if (connections[i] != NULL) {
-          write(connections[i]->sockfd, buffer_out, strlen(buffer_out));
-        }
-      }
-    } else if (buffer_in[0] == '#') {
-      int client = 0;
-      int read = sscanf(buffer_in, "%*[^0123456789]%d ", &client);
-      for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-        if (client == connections[i]->index) {
-          write(connections[i]->sockfd, buffer_out, strlen(buffer_out));
-          break;
-        } // no client found ? : we dont care !!
-      }
-    } else {
-      write(connection->sockfd, buffer_out, strlen(buffer_out));
-    }
-
-    // clear input buffer
-    memset(buffer_in, '\0', BUFFERSIZE);
-  }
-  printf("Connection to client %i ended \n", connection->index);
-  close(connection->sockfd);
-  del(connection);
-  free(connection);
-  pthread_exit(0);
-}
-*/
 int create_server_socket() {
   int sockfd = -1;
   struct sockaddr_in address;
@@ -141,6 +68,19 @@ int create_server_socket() {
   return sockfd;
 }
 
+void addclient(clientStructure *client) {
+
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    if (clients[i] == NULL) {
+      client->idClient = i;
+      client->isInGame = false;
+      clients[i] = client;
+      return;
+    }
+  }
+  perror("Too much simultaneous clients");
+  exit(-5);
+}
 /**
  * @brief Search for an available client
  *
@@ -149,19 +89,16 @@ int create_server_socket() {
 clientStructure *verifyNbClients(int clientID) {
 
   clientStructure *ret = NULL;
-
   ret = malloc(sizeof(clientStructure));
-
   if (ret == NULL) {
     perror("Error initialazing client pointer");
     exit(-3);
   }
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-    if ((connections[i] != NULL) &&
-        (connections[i]->client.idClient != clientID) &&
-        (connections[i]->client.isInGame == false)) {
-      ret = (&(connections[i]->client));
+    if ((clients[i] != NULL) && (clients[i]->idClient != clientID) &&
+        (clients[i]->isInGame == false)) {
+      ret = (clients[i]);
       return ret; // return the index of an available client
     }
   }
@@ -177,14 +114,19 @@ gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
     exit(-3);
   }
 
+  game->client1 = client1;
+  game->client2 = client2;
+  game->c1NbCollab = 0;
+  game->c1NbTreason = 0;
+  game->c2NbCollab = 0;
+  game->c2NbTreason = 0;
+
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (games[i] == NULL && client1 != NULL && client2 != NULL) {
-      games[i] = game;
-      games[i]->client1 = client1;
-      games[i]->client2 = client2;
-      games[i]->idPartie = i;
+      game->idGame = i;
       client1->isInGame = true;
       client2->isInGame = true;
+      games[i] = game;
       return game;
     }
   }
@@ -192,70 +134,182 @@ gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
   exit(-7);
 }
 
-void *threadServeur(void *ptr) {
-  char buffer_in[BUFFERSIZE];
-  char buffer_out[BUFFERSIZE];
+void profitsCalculation(gameStructure *gameInfo) {
 
-  int lenMsgIn;
-  clientStructure *clientAddr;
-  gameStructure *iDGame = NULL;
+  clientStructure *client1 = gameInfo->client1;
+  clientStructure *client2 = gameInfo->client2;
+
+  // On retire les sommes pariées des pactoles
+  client1->money -= client1->bet;
+  client2->money -= client1->bet;
+  gameInfo->client1->money -= gameInfo->client1->bet;
+  gameInfo->client2->money -= gameInfo->client2->bet;
+
+  // If they both betray they gain half their bet
+  if (client1->cooperate == 0 && client2->cooperate == client1->cooperate) {
+    client1->money += client1->bet / 2;
+    client2->money += client1->bet / 2;
+    gameInfo->client1->money += gameInfo->client1->bet / 2;
+    gameInfo->client2->money += gameInfo->client2->bet / 2;
+
+    gameInfo->c1NbTreason += 1;
+    gameInfo->c2NbTreason += 1;
+  }
+  // If C1 betray C2, C1 gain C2's bet
+  else if (client1->cooperate == 0 && client2->cooperate == 1) {
+    client1->money += client2->bet;
+    gameInfo->client1->money += gameInfo->client2->bet;
+
+    gameInfo->c1NbTreason += 1;
+    gameInfo->c2NbCollab += 1;
+  }
+  // If C2 betray C12, C2 gain C1's bet
+  else if (client1->cooperate == 1 && client2->cooperate == 0) {
+    client2->money += client1->bet;
+
+    gameInfo->client2->money += gameInfo->client1->bet;
+
+    gameInfo->c1NbCollab += 1;
+    gameInfo->c2NbTreason += 1;
+  }
+  // If they both collaborate
+  else {
+    client1->money += client1->bet;
+    client2->money += client2->bet;
+
+    gameInfo->client1->money += gameInfo->client1->bet;
+    gameInfo->client2->money += gameInfo->client2->bet;
+
+    gameInfo->c1NbCollab += 1;
+    gameInfo->c2NbCollab += 1;
+  }
+}
+
+// TODO: upgrade for a better filename
+void saveOnfile(gameStructure *gameInfo) {
+
+  FILE *fich;
+  int nbTotalTreason = gameInfo->c1NbTreason + gameInfo->c2NbTreason;
+  int nbTotalCollab = gameInfo->c1NbCollab + gameInfo->c2NbCollab;
+
+  fich = fopen("NOMFICH", "a");
+  if (fich == NULL) {
+    perror("error opening file \n");
+    exit(EXIT_FAILURE);
+  }
+
+  fseek(fich, 0, SEEK_END);
+
+  fprintf(fich, "Game number: %d", gameInfo->idGame);
+  fprintf(fich, "Number of collaboration for player 1: %d",
+          gameInfo->c1NbCollab);
+  fprintf(fich, "Number of treason for player 1: %d", gameInfo->c1NbTreason);
+  fprintf(fich, "Number of collaboration for player 2: %d",
+          gameInfo->c2NbCollab);
+  fprintf(fich, "Number of treason for player 2: %d", gameInfo->c2NbTreason);
+
+  fprintf(fich, "Total number of treason: %d", nbTotalTreason);
+  fprintf(fich, "Total number of collaborations: %d", nbTotalCollab);
+
+  fputs("\0", fich);
+  fclose(fich);
+}
+
+void *threadServeur(void *ptr) {
+
+  // creation of the buffer to receive and send data
+  dataSentReceived *dataRecieved = malloc(sizeof(dataSentReceived));
+  dataSentReceived *dataToSend = malloc(sizeof(dataSentReceived));
+
+  bool hasGameEnded = false;
+  clientStructure *otherClientAddr;
+  clientStructure *client = NULL;
+  gameStructure *gameInfo = NULL;
   connection_t *connection;
-  dataSentReceived *data;
+
   if (!ptr)
     pthread_exit(0);
   connection = (connection_t *)ptr;
   printf("New incoming connection \n");
 
-  add(connection);
-  connection->client.idClient = connection->index;
-  connection->client.isInGame = false;
+  client = malloc(sizeof(clientStructure));
+  if (client == NULL) {
+    perror("No client initialized");
+  }
 
-  printf("Welcome #%i\n", connection->client.idClient);
-  // sprintf(buffer_out, "Welcome #%i\n", connection->client.idClient);
-  write(connection->sockfd, buffer_out, sizeof(buffer_out));
-  //BALANCER LA STRUCTURE DANS LE SOCKET SANS BUFFER
-  //RECUP = RECUPERER AVEC BUFFER_OUT EN CHAR
-  //PUIS PASSER DANS UNE VARIABLE DE TYPE STRUCTURE.
+  add(connection);
+  addclient(client);
+
+  printf("Welcome #%i\n", client->idClient);
 
   // Verification of the number of clients available, minus this client's ID
   // and creation of the game if there is enough clients
-  while (!(connection->client.isInGame)) {
-    clientAddr = verifyNbClients(connection->client.idClient);
-    if (clientAddr != NULL) {
-      iDGame = initGame(clientAddr, &(connection->client));
+  while (!(client->isInGame)) {
+    otherClientAddr = verifyNbClients(client->idClient);
+    if (otherClientAddr != NULL) {
+      gameInfo = initGame(otherClientAddr, client);
     }
   }
 
-  if (iDGame == NULL) {
-    perror("Game non init");
+  if (gameInfo == NULL) {
+    perror("No game initialized");
+  } else { // sendind the game ID to tell the client the game has started
+    dataToSend->currentBet = 0;
+    dataToSend->moneyGainLost = 0;
+    dataToSend->cooperate = NULL; // 1 collaborer     0 trahir
+    dataToSend->totalMoney = 0;
+    dataToSend->iDGame = gameInfo->idGame;
+    dataToSend->gameEnded = NULL;
+    write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
+#if DEBUG
+  bool cooperate; // 1 collaborer     0 trahir
+  unsigned long totalMoney;
+  int iDGame;
+  bool gameEnded;
+  printf("DEBUG-----------------------------------------------------------\n");
+  printf("Data sent:\n");
+  printf("CurrentBet: %d \n", dataToSend->currentBet);
+  printf("Money Lost: %d \n", dataToSend->moneyGainLost);
+  printf("Choice: %d \n", dataToSend->cooperate);
+  printf("TotalMoney: %d \n", dataToSend->totalMoney);
+  printf("IDGame: %d \n", dataToSend->iDGame);
+  printf("Game Ended ? %d", dataToSend->gameEnded);
+  printf("----------------------------------------------------------------\n");
+#endif
 
-  // tant que le client ne ferme pas la connexion
-  while ((lenMsgIn = read(connection->sockfd, buffer_in, BUFFERSIZE)) > 0) {
+  while (!hasGameEnded) {
+    read(connection->sockfd, dataRecieved, (sizeof(dataSentReceived)));
+#if DEBUG
+    bool cooperate; // 1 collaborer     0 trahir
+    unsigned long totalMoney;
+    int iDGame;
+    bool gameEnded;
+    printf(
+        "DEBUG-----------------------------------------------------------\n");
+    printf("Data Received:\n");
+    printf("CurrentBet: %d \n", dataToSend->currentBet);
+    printf("Money Lost: %d \n", dataToSend->moneyGainLost);
+    printf("Choice: %d \n", dataToSend->cooperate);
+    printf("TotalMoney: %d \n", dataToSend->totalMoney);
+    printf("IDGame: %d \n", dataToSend->iDGame);
+    printf("Game Ended ? %d", dataToSend->gameEnded);
+    printf(
+        "----------------------------------------------------------------\n");
+#endif
 
-    if (strncmp(buffer_in, "bye", 3) == 0) {
-      break;
-    }
-    memset(buffer_in, 0, sizeof(buffer_in));
-    // réception données
-    clientAddr->pactole=data->totalMoney;
-    clientAddr->choix=data->cooperate;
-    clientAddr->sommePariée=data->currentBet;
-    // puis traitement et renvoi
-    calculgains(iDGame);
-    data->totalMoney=clientAddr->pactole;
-    data->cooperate=clientAddr->choix;
-    data->currentBet=clientAddr->sommePariée;
-  }
+    hasGameEnded = dataRecieved->gameEnded;
+    computeAndSend(client, dataRecieved, gameInfo, dataToSend);
 
   
 
-  // ecriture sur fichier avant fermeture
   close(connection->sockfd);
   del(connection);
   free(connection);
-  free(iDGame);
-  free(clientAddr);
+  free(gameInfo);
+  free(otherClientAddr);
+  free(dataRecieved);
+  free(dataToSend);
   pthread_exit(0);
 }
 
