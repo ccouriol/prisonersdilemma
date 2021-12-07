@@ -51,8 +51,8 @@ typedef struct gameStructure {
   int c1NbCollab;
   int c2NbTreason;
   int c2NbCollab;
-  clientStructure *client1;
-  clientStructure *client2;
+  int iDClient1;
+  int iDClient2;
 } gameStructure;
 
 typedef struct dataSentReceived {
