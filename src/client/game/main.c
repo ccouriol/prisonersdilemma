@@ -148,6 +148,8 @@ void start_gtk_gui(int *ac, char ***av) {
 */
 void *threadGame(void *ptr) {
 
+dataSentReceived *sending = malloc(sizeof(dataSentReceived));
+
 int sockfd = *((int *)ptr);
 
   for (int i = 0; i == ROUND_MAX; i++) {
@@ -178,13 +180,17 @@ int sockfd = *((int *)ptr);
 int main(int argc, char **argv) {
   int sockfd;
   pthread_t thread;
+  dataSentReceived *sending = malloc(sizeof(dataSentReceived));
+  dataSentReceived *receiving = malloc(sizeof(dataSentReceived));
 
-  sockfd = open_connection();
+  // sockfd = open_connection();
   puts("Client is alive");
 
   // phthread created for reading
   pthread_create(&thread, 0, threadProcess, &sockfd);
   pthread_detach(thread);
+
+  receiving->gameLaunched = 1;
 
   if (receiving->gameLaunched == 1) {
     start_gtk_gui(&argc, &argv);
