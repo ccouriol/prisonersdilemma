@@ -4,6 +4,7 @@ connection_t *connections[MAXSIMULTANEOUSCLIENTS];
 gameStructure *games[MAXSIMULTANEOUSCLIENTS];
 clientStructure *tabClients[MAXSIMULTANEOUSCLIENTS];
 
+
 // TODO: système de rounds sur le serveur, dans la structure game
 // faire une lecture depuis fichier de config, et mettre dans variable globale
 // puis mettre variable globale dans variable locale de la struct
@@ -185,6 +186,7 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
 
   clientStructure *client1 = tabClients[client->idClient];
   clientStructure *client2 = NULL;
+  gameStructure *NBROUND=0;
 
   if (client->idClient != gameInfo->iDClient1) {
     client2 = tabClients[gameInfo->iDClient2];
@@ -219,10 +221,10 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
     gameInfo->c1NbTreason += 1;
     gameInfo->c2NbCollab += 1;
   }
-  // If C2 betray C12, C2 gain C1's bet
+  // If C2 betray C1, C2 gain C1's bet
   else if (client1->cooperate == 1 && client2->cooperate == 0) {
     client2->money += client1->bet;
-
+    
     gameInfo->c1NbCollab += 1;
     gameInfo->c2NbTreason += 1;
   }
@@ -234,6 +236,7 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
     gameInfo->c1NbCollab += 1;
     gameInfo->c2NbCollab += 1;
   }
+  NBROUND+=1;
 }
 
 // TODO: upgrade for a better filename
