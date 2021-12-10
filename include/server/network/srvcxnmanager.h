@@ -47,8 +47,6 @@ typedef struct {
   int index;
 } connection_t;
 
-
-
 typedef struct gameStructure {
   int idGame;
   int c1NbTreason;
@@ -57,7 +55,7 @@ typedef struct gameStructure {
   int c2NbCollab;
   int iDClient1;
   int iDClient2;
-  int NBROUND;
+  int nbrounds;
 } gameStructure;
 
 typedef struct dataSentReceived {
@@ -87,7 +85,7 @@ void removeGame(gameStructure *iDGame);
 gameStructure *initGame(int client1ID, int client2ID);
 void profitsCalculation(clientStructure *client, gameStructure *gameInfo);
 void saveOnfile(gameStructure *gameInfo);
-void computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
+bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
                     gameStructure *gameInfo, dataSentReceived *dataToSend);
 
 void *threadServeur(void *ptr);
