@@ -69,9 +69,10 @@ void add(connection_t *connection);
 void del(connection_t *connection);
 void *threadProcess(void *ptr);
 void addclient(clientStructure *client);
-clientStructure *verifyNbClients(int clientID);
-gameStructure *initGame(clientStructure *client1, clientStructure *client2);
-void profitsCalculation(gameStructure *gameInfo);
+
+int verifyNbClients(int clientID);
+
+void removeClient(int IDClient);
 void saveOnfile(gameStructure *gameInfo);
 void computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
                     gameStructure *gameInfo, dataSentReceived *dataToSend);
