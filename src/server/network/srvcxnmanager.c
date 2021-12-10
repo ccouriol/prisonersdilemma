@@ -4,6 +4,10 @@ connection_t *connections[MAXSIMULTANEOUSCLIENTS];
 gameStructure *games[MAXSIMULTANEOUSCLIENTS];
 clientStructure *tabClients[MAXSIMULTANEOUSCLIENTS];
 
+// TODO: système de rounds sur le serveur, dans la structure game
+// faire une lecture depuis fichier de config, et mettre dans variable globale
+// puis mettre variable globale dans variable locale de la struct
+
 void init_sockets_array() {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     connections[i] = NULL;
@@ -68,7 +72,7 @@ int create_server_socket() {
   return sockfd;
 }
 
-void addclient(clientStructure *client) {
+void createClient(clientStructure *client) {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (tabClients[i] == NULL) {
       client->idClient = i;
@@ -80,33 +84,43 @@ void addclient(clientStructure *client) {
   perror("Too much simultaneous clients");
   exit(15);
 }
+
+void removeClient(int IDClient) {
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    if (i == IDClient) {
+      tabClients[i] = NULL;
+      return;
+    }
+    perror("Client not in pool");
+    exit(-5);
+  }
+}
+
+void disconnectAllClients(gameStructure *game) {
+  removeClient(game->iDClient1);
+  removeClient(game->iDClient2);
+}
+
 /**
  * @brief Search for an available client
  *
  * @return int the position of an available client
  */
-clientStructure *verifyNbClients(int clientID) {
+int verifyNbClients(int clientID) {
 
-  clientStructure *ret;
-  // ret = malloc(sizeof(clientStructure));
-  // if (!ret)
-  //   pthread_exit(0);
-  // if (ret == NULL) {
-  //   perror("Error initialazing client pointer");
-  //   exit(-3);
-  // }
+  int ret = -1;
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if ((tabClients[i] != NULL) && (tabClients[i]->idClient != clientID) &&
         (tabClients[i]->isInGame == false)) {
-      ret = (tabClients[i]);
+      ret = i;
       return ret; // return the index of an available client
     }
   }
-  return ret = NULL;
+  return ret;
 }
 
-gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
+gameStructure *initGame(int client1ID, int client2ID) {
 
   gameStructure *game = malloc(sizeof(gameStructure));
   // if (game == NULL) {
@@ -116,18 +130,18 @@ gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
   if (!game)
     pthread_exit(0);
 
-  game->client1 = client1;
-  game->client2 = client2;
+  game->iDClient1 = client1ID;
+  game->iDClient2 = client2ID;
   game->c1NbCollab = 0;
   game->c1NbTreason = 0;
   game->c2NbCollab = 0;
   game->c2NbTreason = 0;
 
-  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-    if (games[i] == NULL && client1 != NULL && client2 != NULL) {
+  for (int i = 0; i < MAXSIMULTANEAOUSGAMES; i++) {
+    if (games[i] == NULL && (game->iDClient1 != 0) && (game->iDClient2 != 0)) {
       game->idGame = i;
-      client1->isInGame = true;
-      client2->isInGame = true;
+      tabClients[client1ID]->isInGame = true;
+      tabClients[client2ID]->isInGame = true;
       games[i] = game;
       return game;
     }
@@ -136,24 +150,65 @@ gameStructure *initGame(clientStructure *client1, clientStructure *client2) {
   exit(-7);
 }
 
-void profitsCalculation(gameStructure *gameInfo) {
+int checkSocket() {
+  // on vérifie l'existence du socket et on renvoie le resultat
+  return 0;
+}
 
-  clientStructure *client1;
-  client1 = gameInfo->client1;
-  clientStructure *client2 = gameInfo->client2;
+void removeGame(gameStructure *iDGame) {
+  for (int i = 0; i < MAXSIMULTANEAOUSGAMES; i++) {
+    if (games[i] == iDGame) {
+      games[i] = NULL;
+    }
+  }
+  perror("Game not in pool");
+  exit(-8);
+}
+
+void closeAll(connection_t *connection, gameStructure *gameInfo,
+              dataSentReceived *dataRecieved, dataSentReceived *dataToSend,
+              clientStructure *client) {
+
+  disconnectAllClients(gameInfo);
+  removeGame(gameInfo);
+  close(connection->sockfd);
+  del(connection);
+  free(connection);
+  free(gameInfo);
+  free(dataRecieved);
+  free(dataToSend);
+  free(client);
+  pthread_exit(0);
+}
+
+void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
+
+  clientStructure *client1 = tabClients[client->idClient];
+  clientStructure *client2 = NULL;
+
+  if (client->idClient != gameInfo->iDClient1) {
+    // client->idClient != gameInfo->iDClient1)
+    client2 = tabClients[gameInfo->iDClient2];
+  } else
+    perror("Client non trouvé pour le calcul");
+
+  if (!client1) {
+    pthread_exit(0);
+  }
+  if (!client2) {
+    pthread_exit(0);
+  }
 
   // On retire les sommes pariées des pactoles
   client1->money -= client1->bet;
   client2->money -= client1->bet;
-  gameInfo->client1->money -= gameInfo->client1->bet;
-  gameInfo->client2->money -= gameInfo->client2->bet;
+  client1->money -= client1->bet;
+  client2->money -= client2->bet;
 
   // If they both betray they gain half their bet
   if (client1->cooperate == 0 && client2->cooperate == client1->cooperate) {
     client1->money += client1->bet / 2;
     client2->money += client1->bet / 2;
-    gameInfo->client1->money += gameInfo->client1->bet / 2;
-    gameInfo->client2->money += gameInfo->client2->bet / 2;
 
     gameInfo->c1NbTreason += 1;
     gameInfo->c2NbTreason += 1;
@@ -161,7 +216,6 @@ void profitsCalculation(gameStructure *gameInfo) {
   // If C1 betray C2, C1 gain C2's bet
   else if (client1->cooperate == 0 && client2->cooperate == 1) {
     client1->money += client2->bet;
-    gameInfo->client1->money += gameInfo->client2->bet;
 
     gameInfo->c1NbTreason += 1;
     gameInfo->c2NbCollab += 1;
@@ -170,8 +224,6 @@ void profitsCalculation(gameStructure *gameInfo) {
   else if (client1->cooperate == 1 && client2->cooperate == 0) {
     client2->money += client1->bet;
 
-    gameInfo->client2->money += gameInfo->client1->bet;
-
     gameInfo->c1NbCollab += 1;
     gameInfo->c2NbTreason += 1;
   }
@@ -179,9 +231,6 @@ void profitsCalculation(gameStructure *gameInfo) {
   else {
     client1->money += client1->bet;
     client2->money += client2->bet;
-
-    gameInfo->client1->money += gameInfo->client1->bet;
-    gameInfo->client2->money += gameInfo->client2->bet;
 
     gameInfo->c1NbCollab += 1;
     gameInfo->c2NbCollab += 1;
@@ -226,10 +275,10 @@ void *threadServeur(void *ptr) {
   clientStructure *client = malloc(sizeof(clientStructure));
 
   bool hasGameEnded = false;
-  clientStructure *otherClientAddr;
+  int otherClientID;
   // gameStructure *gameInfo = NULL;
-  connection_t *connection;
-  gameStructure *gameInfo;
+  connection_t *connection = NULL;
+  gameStructure *gameInfo = NULL;
   // gameInfo = malloc(sizeof(gameStructure));
 
   if (!ptr)
@@ -245,48 +294,37 @@ void *threadServeur(void *ptr) {
 
   if (!dataToSend)
     pthread_exit(0);
-  // client->idClient = 400;
-
-  // if (!client) {
-  //   perror("No client initialized");
-  // }
 
   add(connection);
-  addclient(client);
+  createClient(client);
   printf("Welcome #%i\n", client->idClient);
 
   // Verification of the number of clients available, minus this client's ID
   // and creation of the game if there is enough clients
   while (!(client->isInGame)) {
-
-    // int indexclient = verifyNbClients2(client->idClient);
-    // if (indexclient >= 0) {
-    //   initGame2(tabClients[indexclient], client, gameInfo);
-    // }
-
-    otherClientAddr = verifyNbClients(client->idClient);
-    if (otherClientAddr != NULL) {
-      gameInfo = initGame(otherClientAddr, client);
+    otherClientID = verifyNbClients(client->idClient);
+    if (otherClientID >= 0) {
+      gameInfo = initGame((client->idClient), otherClientID);
     }
   }
+  if (!gameInfo) {
+    perror("Error: No game initialized");
+    exit(64);
+  }
 
-  gameInfo->client1->idClient = 10;
-  // if (!gameInfo)
-  //   perror("Error :No game initialized");
-  gameInfo->idGame = 5;
-  gameInfo->c2NbTreason = 5;
-  gameInfo->client1->idClient = 10;
+  gameInfo->iDClient1 = 10;
 
   // sendind the game ID to tell the client the game has started
   dataToSend->currentBet = 0;
   dataToSend->moneyGainLost = 0;
-  dataToSend->cooperate = NULL; // 1 collaborer     0 trahir
+  dataToSend->cooperate = false; // 1 collaborer     0 trahir
   dataToSend->totalMoney = 0;
   dataToSend->iDGame = gameInfo->idGame;
-  dataToSend->gameEnded = NULL;
+  dataToSend->gameEnded = false;
+  dataToSend->gameStarted = true;
   write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
 
-// #if DEBUG
+  // #if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
   printf("CurrentBet: %lu \n", dataToSend->currentBet);
@@ -300,7 +338,7 @@ void *threadServeur(void *ptr) {
 
   while (!hasGameEnded) {
     read(connection->sockfd, dataRecieved, (sizeof(dataSentReceived)));
-// #if DEBUG
+    // #if DEBUG
     printf(
         "DEBUG-----------------------------------------------------------\n");
     printf("Data Received:\n");
@@ -312,14 +350,17 @@ void *threadServeur(void *ptr) {
     printf("Game Ended ? %d\n", dataRecieved->gameEnded);
     printf(
         "----------------------------------------------------------------\n");
-// #endif
+    // #endif
 
-    hasGameEnded = dataRecieved->gameEnded;
+    // hasGameEnded = dataRecieved->gameEnded;
+    // TODO: modif serveur pour que ce soit lui qui gere le nb de rounds, et non
+    // le client p-e lors de l'envoi ?
+    // TODO: refaire cette focntion
     computeAndSend(client, dataRecieved, gameInfo, dataToSend);
 
     write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
-// #if DEBUG
+  //#if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
   printf("CurrentBet: %lu \n", dataToSend->currentBet);
@@ -329,20 +370,13 @@ void *threadServeur(void *ptr) {
   printf("IDGame: %d \n", dataToSend->iDGame);
   printf("Game Ended ? %d\n", dataToSend->gameEnded);
   printf("----------------------------------------------------------------\n");
-  // #endif
-  // saving on file, but only if the client's ID is an odd number
+  //#endif
+
+  // saving on file, but only if the client's ID is an even number
   if (connection->index % 2 == 0) {
     saveOnfile(gameInfo);
+    closeAll(connection, gameInfo, dataRecieved, dataToSend, client);
   }
-
-  close(connection->sockfd);
-  del(connection);
-  free(connection);
-  free(gameInfo);
-  free(otherClientAddr);
-  free(dataRecieved);
-  free(dataToSend);
-  pthread_exit(0);
 }
 
 void computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
@@ -354,12 +388,12 @@ void computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
   client->bet = dataRecieved->currentBet;
 
   // puis traitement et renvoi
-  profitsCalculation(gameInfo);
+  profitsCalculation(client, gameInfo);
   dataToSend->totalMoney = client->money;
   dataToSend->cooperate = client->cooperate;
   dataToSend->currentBet = client->bet;
-  if (gameInfo->client1->idClient == client->idClient) {
-    dataToSend->moneyGainLost = gameInfo->client1->bet;
+  if (gameInfo->iDClient1 == client->idClient) {
+    dataToSend->moneyGainLost = client->bet;
   } else
-    dataToSend->moneyGainLost = gameInfo->client2->bet;
+    dataToSend->moneyGainLost = tabClients[gameInfo->iDClient2]->bet;
 }

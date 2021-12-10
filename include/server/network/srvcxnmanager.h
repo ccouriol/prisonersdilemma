@@ -51,12 +51,12 @@ typedef struct gameStructure {
   int c1NbCollab;
   int c2NbTreason;
   int c2NbCollab;
-  clientStructure *client1;
-  clientStructure *client2;
+  int iDClient1;
+  int iDClient2;
 } gameStructure;
 
-
-//TODO Envoyer depuis le serveur une valeur pour dire que le jeu est lancé (int gameLaunched = 1)
+// TODO Envoyer depuis le serveur une valeur pour dire que le jeu est lancé (int
+// gameLaunched = 1)
 typedef struct dataSentReceived {
   unsigned long currentBet;
   unsigned long moneyGainLost;
@@ -64,21 +64,33 @@ typedef struct dataSentReceived {
   unsigned long totalMoney;
   int iDGame;
   bool gameEnded;
+  bool gameStarted;
 } dataSentReceived;
 
 void init_sockets_array();
+int create_server_socket();
 void add(connection_t *connection);
 void del(connection_t *connection);
-void *threadProcess(void *ptr);
+
+// void *threadProcess(void *ptr);
+
+void createClient(clientStructure *client);
 void addclient(clientStructure *client);
-clientStructure *verifyNbClients(int clientID);
-gameStructure *initGame(clientStructure *client1, clientStructure *client2);
-void profitsCalculation(gameStructure *gameInfo);
+int verifyNbClients(int clientID);
+void removeClient(int IDClient);
+void disconnectAllClients(gameStructure *game);
+void removeGame(gameStructure *iDGame);
+
+gameStructure *initGame(int client1ID, int client2ID);
+void profitsCalculation(clientStructure *client, gameStructure *gameInfo);
 void saveOnfile(gameStructure *gameInfo);
 void computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
                     gameStructure *gameInfo, dataSentReceived *dataToSend);
+
 void *threadServeur(void *ptr);
 
-int create_server_socket();
+void closeAll(connection_t *connection, gameStructure *gameInfo,
+              dataSentReceived *dataRecieved, dataSentReceived *dataToSend,
+              clientStructure *client);
 
 #endif /* SRVCXNMANAGER_H */
