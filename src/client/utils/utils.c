@@ -29,16 +29,25 @@ void *threadProcess(void *ptr) {
 
   int sockfd = *((int *)ptr);
 
-  dataSentReceived *sending = malloc(sizeof(dataSentReceived));
-  dataSentReceived *receiving = malloc(sizeof(dataSentReceived));
+  dataSentReceived *sending; 
+  dataSentReceived *receiving;
+
+  sending = malloc(sizeof(dataSentReceived));
+  receiving = malloc(sizeof(dataSentReceived));
 
   write(sockfd, sending, sizeof(dataSentReceived));
-  read(sockfd, receiving, sizeof(dataSentReceived));
+  // read(sockfd, receiving, sizeof(dataSentReceived));
 
-  close(sockfd);
   puts("client pthread ended");
 
-  return 0;
+  int i=0;
+  while(i < 10000)
+  {
+    sleep(1);
+    printf("PROCESS %d\n", i);
+    i++;
+  }
+
 }
 
 
