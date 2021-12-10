@@ -8,6 +8,14 @@ clientStructure *tabClients[MAXSIMULTANEOUSCLIENTS];
 // faire une lecture depuis fichier de config, et mettre dans variable globale
 // puis mettre variable globale dans variable locale de la struct
 
+// TODO: faire en sorte que ca soit 1 DES DEUX CLIENTS
+
+// wait for bool isFilled pour déclencher les calculs, pour faire atten,tion
+// au fait que le truc soit rempli
+
+// TODO: refaire la verif du n° client pour l'appel des fonctions
+// saving on file, but only if the client's ID is an even number
+
 void init_sockets_array() {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     connections[i] = NULL;
@@ -169,7 +177,7 @@ void closeAll(connection_t *connection, gameStructure *gameInfo,
               dataSentReceived *dataRecieved, dataSentReceived *dataToSend,
               clientStructure *client) {
 
-  disconnectClients(gameInfo);
+  disconnectAllClients(gameInfo);
   removeGame(gameInfo);
   close(connection->sockfd);
   del(connection);
@@ -197,6 +205,11 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
   }
   if (!client2) {
     pthread_exit(0);
+  }
+
+  // we wait for the clients to fill their data
+  while (!(client1->isFilled) && !(client2->isFilled)) {
+    wait(1);
   }
 
   // On retire les sommes pariées des pactoles
@@ -386,9 +399,12 @@ void computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
   client->money = dataRecieved->totalMoney;
   client->cooperate = dataRecieved->cooperate;
   client->bet = dataRecieved->currentBet;
+  client->isFilled = 1;
 
-  // puis traitement et renvoi
-  profitsCalculation(client, gameInfo);
+  // Only one of the clients should use this
+  if ((client->idClient) > (gameInfo->iDClient2)) {
+    profitsCalculation(client, gameInfo);
+  }
   dataToSend->totalMoney = client->money;
   dataToSend->cooperate = client->cooperate;
   dataToSend->currentBet = client->bet;
@@ -396,4 +412,5 @@ void computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
     dataToSend->moneyGainLost = client->bet;
   } else
     dataToSend->moneyGainLost = tabClients[gameInfo->iDClient2]->bet;
+  client->isFilled = 0;
 }

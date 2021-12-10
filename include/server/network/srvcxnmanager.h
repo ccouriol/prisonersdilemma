@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
 
 #ifndef SRVCXNMANAGER_H
@@ -36,6 +37,7 @@ typedef struct clientStructure {
   bool cooperate;
   unsigned long bet;
   unsigned long money;
+  bool isFilled;
 } clientStructure;
 
 typedef struct {
