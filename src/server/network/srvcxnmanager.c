@@ -97,7 +97,7 @@ void removeClient(int IDClient) {
   }
 }
 
-void disconnectClients(gameStructure *game) {
+void disconnectAllClients(gameStructure *game) {
   removeClient(game->iDClient1);
   removeClient(game->iDClient2);
 }
@@ -139,7 +139,7 @@ gameStructure *initGame(int client1ID, int client2ID) {
   game->c2NbTreason = 0;
 
   for (int i = 0; i < MAXSIMULTANEAOUSGAMES; i++) {
-    if (games[i] == NULL && game->iDClient1 != 0 && game->iDClient2 != 0) {
+    if (games[i] == NULL && (game->iDClient1 != 0) && (game->iDClient2 != 0)) {
       game->idGame = i;
       tabClients[client1ID]->isInGame = true;
       tabClients[client2ID]->isInGame = true;
@@ -189,6 +189,7 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
   gameStructure *NBROUND=0;
 
   if (client->idClient != gameInfo->iDClient1) {
+    // client->idClient != gameInfo->iDClient1)
     client2 = tabClients[gameInfo->iDClient2];
   } else
     perror("Client non trouvé pour le calcul");
@@ -306,27 +307,24 @@ void *threadServeur(void *ptr) {
   while (!(client->isInGame)) {
     otherClientID = verifyNbClients(client->idClient);
     if (otherClientID >= 0) {
-      gameInfo = initGame(client->idClient, otherClientID);
+      gameInfo = initGame((client->idClient), otherClientID);
     }
   }
-  if (!gameInfo)
-    perror("Error :No game initialized");
+  if (!gameInfo) {
+    perror("Error: No game initialized");
+    exit(64);
+  }
 
-  // gameInfo->client1->idClient = 10;
-  // gameInfo->idGame = 5;
-  // gameInfo->c2NbTreason = 5;
-  // gameInfo->client1->idClient = 10;
+  gameInfo->iDClient1 = 10;
 
-  // TODO: refaire le debut de game, refaire les envois,
-  // TODO: LE CLIENT SE FAIT SERVIR, cad envoi de tout, (pactole), nbrounds
-  // reste sur le serveur
   // sendind the game ID to tell the client the game has started
   dataToSend->currentBet = 0;
   dataToSend->moneyGainLost = 0;
   dataToSend->cooperate = false; // 1 collaborer     0 trahir
   dataToSend->totalMoney = 0;
-  dataToSend->iDGame = gameInfo->idGame;
+  // dataToSend->iDGame = gameInfo->idGame;
   dataToSend->gameEnded = false;
+  dataToSend->gameStarted = true;
   write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
 
 #if DEBUG
