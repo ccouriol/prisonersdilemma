@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
 
 #ifndef SRVCXNMANAGER_H
@@ -36,6 +37,7 @@ typedef struct clientStructure {
   bool cooperate;
   unsigned long bet;
   unsigned long money;
+  bool isFilled;
 } clientStructure;
 
 typedef struct {
@@ -53,6 +55,7 @@ typedef struct gameStructure {
   int c2NbCollab;
   int iDClient1;
   int iDClient2;
+  int nbrounds;
 } gameStructure;
 
 // TODO Envoyer depuis le serveur une valeur pour dire que le jeu est lancé (int
@@ -84,7 +87,7 @@ void removeGame(gameStructure *iDGame);
 gameStructure *initGame(int client1ID, int client2ID);
 void profitsCalculation(clientStructure *client, gameStructure *gameInfo);
 void saveOnfile(gameStructure *gameInfo);
-void computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
+bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
                     gameStructure *gameInfo, dataSentReceived *dataToSend);
 
 void *threadServeur(void *ptr);

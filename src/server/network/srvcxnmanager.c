@@ -3,10 +3,18 @@
 connection_t *connections[MAXSIMULTANEOUSCLIENTS];
 gameStructure *games[MAXSIMULTANEOUSCLIENTS];
 clientStructure *tabClients[MAXSIMULTANEOUSCLIENTS];
+int NBROUNDS = 5;
 
 // TODO: système de rounds sur le serveur, dans la structure game
 // faire une lecture depuis fichier de config, et mettre dans variable globale
 // puis mettre variable globale dans variable locale de la struct
+
+// TODO: faire en sorte que ca soit 1 DES DEUX CLIENTS
+
+// wait for bool isFilled pour déclencher les calculs, pour faire atten,tion
+// au fait que le truc soit rempli
+
+// saving on file, but only if the client's ID is an even number
 
 void init_sockets_array() {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
@@ -77,6 +85,7 @@ void createClient(clientStructure *client) {
     if (tabClients[i] == NULL) {
       client->idClient = i;
       client->isInGame = false;
+      client->isFilled = false;
       tabClients[i] = client;
       return;
     }
@@ -120,6 +129,8 @@ int verifyNbClients(int clientID) {
   return ret;
 }
 
+int readConfigFile() {}
+
 gameStructure *initGame(int client1ID, int client2ID) {
 
   gameStructure *game = malloc(sizeof(gameStructure));
@@ -136,6 +147,8 @@ gameStructure *initGame(int client1ID, int client2ID) {
   game->c1NbTreason = 0;
   game->c2NbCollab = 0;
   game->c2NbTreason = 0;
+  game->nbrounds = NBROUNDS;
+  // TODO: change this for config file reading
 
   for (int i = 0; i < MAXSIMULTANEAOUSGAMES; i++) {
     if (games[i] == NULL && (game->iDClient1 != 0) && (game->iDClient2 != 0)) {
@@ -147,7 +160,7 @@ gameStructure *initGame(int client1ID, int client2ID) {
     }
   }
   perror("No game initialized");
-  exit(-7);
+  exit(-5);
 }
 
 int checkSocket() {
@@ -185,6 +198,7 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
 
   clientStructure *client1 = tabClients[client->idClient];
   clientStructure *client2 = NULL;
+  gameStructure *NBROUND = 0;
 
   if (client->idClient != gameInfo->iDClient1) {
     // client->idClient != gameInfo->iDClient1)
@@ -197,6 +211,11 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
   }
   if (!client2) {
     pthread_exit(0);
+  }
+
+  // we wait for the clients to fill their data
+  while (!(client1->isFilled) && !(client2->isFilled)) {
+    sleep(1);
   }
 
   // On retire les sommes pariées des pactoles
@@ -220,7 +239,7 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
     gameInfo->c1NbTreason += 1;
     gameInfo->c2NbCollab += 1;
   }
-  // If C2 betray C12, C2 gain C1's bet
+  // If C2 betray C1, C2 gain C1's bet
   else if (client1->cooperate == 1 && client2->cooperate == 0) {
     client2->money += client1->bet;
 
@@ -352,11 +371,7 @@ void *threadServeur(void *ptr) {
         "----------------------------------------------------------------\n");
     // #endif
 
-    // hasGameEnded = dataRecieved->gameEnded;
-    // TODO: modif serveur pour que ce soit lui qui gere le nb de rounds, et non
-    // le client p-e lors de l'envoi ?
-    // TODO: refaire cette focntion
-    computeAndSend(client, dataRecieved, gameInfo, dataToSend);
+    hasGameEnded = computeAndSend(client, dataRecieved, gameInfo, dataToSend);
 
     write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
@@ -373,27 +388,39 @@ void *threadServeur(void *ptr) {
   //#endif
 
   // saving on file, but only if the client's ID is an even number
-  if (connection->index % 2 == 0) {
+  if ((client->idClient) > (gameInfo->iDClient2)) {
     saveOnfile(gameInfo);
     closeAll(connection, gameInfo, dataRecieved, dataToSend, client);
   }
 }
 
-void computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
+bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
                     gameStructure *gameInfo, dataSentReceived *dataToSend) {
+  bool hasGameEnded = false;
 
   // Reception and filling of the client structure
   client->money = dataRecieved->totalMoney;
   client->cooperate = dataRecieved->cooperate;
   client->bet = dataRecieved->currentBet;
+  client->isFilled = true;
 
-  // puis traitement et renvoi
-  profitsCalculation(client, gameInfo);
+  // Only one of the clients should use this
+  if ((client->idClient) > (gameInfo->iDClient2)) {
+    profitsCalculation(client, gameInfo);
+    gameInfo->nbrounds = gameInfo->nbrounds - 1;
+    if ((gameInfo->nbrounds) == 0) {
+      hasGameEnded = true;
+    }
+  }
   dataToSend->totalMoney = client->money;
   dataToSend->cooperate = client->cooperate;
   dataToSend->currentBet = client->bet;
   if (gameInfo->iDClient1 == client->idClient) {
     dataToSend->moneyGainLost = client->bet;
-  } else
+  } else {
     dataToSend->moneyGainLost = tabClients[gameInfo->iDClient2]->bet;
+  }
+  client->isFilled = false;
+
+  return hasGameEnded;
 }
