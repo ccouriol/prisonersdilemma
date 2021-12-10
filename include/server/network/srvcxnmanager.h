@@ -47,6 +47,8 @@ typedef struct {
   int index;
 } connection_t;
 
+
+
 typedef struct gameStructure {
   int idGame;
   int c1NbTreason;
@@ -55,6 +57,7 @@ typedef struct gameStructure {
   int c2NbCollab;
   int iDClient1;
   int iDClient2;
+  int NBROUND;
 } gameStructure;
 
 typedef struct dataSentReceived {
