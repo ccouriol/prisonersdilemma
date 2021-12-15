@@ -277,10 +277,19 @@ void *threadServeur(void *ptr) {
     exit(64);
   }
 
-  initDataToSend(dataToSend, client);
-  write(connection->sockfd, dataToSend, sizebufferData);
+  gameInfo->iDClient1 = 10;
 
-// #if DEBUG
+  // sendind the game ID to tell the client the game has started
+  dataToSend->currentBet = 0;
+  dataToSend->moneyGainLost = 0;
+  dataToSend->cooperate = false; // 1 collaborer     0 trahir
+  dataToSend->totalMoney = 0;
+  dataToSend->iDGame = gameInfo->idGame;
+  dataToSend->gameEnded = false;
+  dataToSend->gameStarted = true;
+  write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
+
+  // #if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
   printf("CurrentBet: %lu \n", dataToSend->currentBet);
@@ -292,29 +301,32 @@ void *threadServeur(void *ptr) {
   // #endif
 
   while (!hasGameEnded) {
+    read(connection->sockfd, dataRecieved, (sizeof(dataSentReceived)));
+    // #if DEBUG
+    printf(
+        "DEBUG-----------------------------------------------------------\n");
+    printf("Data Received:\n");
+    printf("CurrentBet: %lu \n", dataRecieved->currentBet);
+    printf("Money Lost: %lu \n", dataRecieved->moneyGainLost);
+    printf("Choice: %d \n", dataRecieved->cooperate);
+    printf("TotalMoney: %lu \n", dataRecieved->totalMoney);
+    printf("IDGame: %d \n", dataRecieved->iDGame);
+    printf("Game Ended ? %d\n", dataRecieved->gameEnded);
+    printf(
+        "----------------------------------------------------------------\n");
+    // #endif
 
-    if ((len = read(connection->sockfd, dataRecieved, sizebufferData)) > 0) {
+    hasGameEnded = computeAndSend(client, dataRecieved, gameInfo, dataToSend);
 
-      hasGameEnded = computeAndSend(client, dataRecieved, gameInfo, dataToSend);
-
-      write(connection->sockfd, dataToSend, sizebufferData);
-    }
+    write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
-
-#if DEBUG
-  printf("DEBUG-----------------------------------------------------------\n");
-  printf("Data Received:\n");
-  printf("CurrentBet: %lu \n", dataRecieved->currentBet);
-  printf("Choice: %d \n", dataRecieved->cooperate);
-  printf("TotalMoney: %lu \n", dataRecieved->totalMoney);
-  printf("IDGame: %d \n", dataRecieved->iDGame);
-  printf("Game Ended ? %d\n", dataRecieved->gameEnded);
-  printf("----------------------------------------------------------------\n");
+  //#if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
   printf("CurrentBet: %lu \n", dataToSend->currentBet);
   printf("Game Ended ? %d\n", dataToSend->gameEnded);
   printf("----------------------------------------------------------------\n");
+  //#endif
 
   // saving on file, but only if the client's ID is an even number
   if ((client->idClient) > (gameInfo->iDClient2)) {
@@ -352,68 +364,12 @@ bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
   dataToSend->totalMoney = client->money;
   dataToSend->cooperate = client->cooperate;
   dataToSend->currentBet = client->bet;
+  if (gameInfo->iDClient1 == client->idClient) {
+    dataToSend->moneyGainLost = client->bet;
+  } else {
+    dataToSend->moneyGainLost = tabClients[gameInfo->iDClient2]->bet;
+  }
   client->isFilled = false;
 
   return hasGameEnded;
-}
-
-void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
-
-  clientStructure *client1 = tabClients[client->idClient];
-  clientStructure *client2 = NULL;
-
-  if (client->idClient != gameInfo->iDClient2) {
-    // client->idClient != gameInfo->iDClient1)
-    client2 = tabClients[gameInfo->iDClient2];
-  } else
-    perror("Client non trouvé pour le calcul");
-
-  if (!client1) {
-    pthread_exit(0);
-  }
-  if (!client2) {
-    pthread_exit(0);
-  }
-
-  // we wait for the clients to fill their data
-  while (!(client1->isFilled) && !(client2->isFilled)) {
-    sleep(1);
-  }
-
-  // On retire les sommes pariées des pactoles
-  client1->money -= client1->bet;
-  client2->money -= client1->bet;
-  client1->money -= client1->bet;
-  client2->money -= client2->bet;
-
-  // If they both betray they gain half their bet
-  if (client1->cooperate == 0 && client2->cooperate == client1->cooperate) {
-    client1->money += client1->bet / 2;
-    client2->money += client1->bet / 2;
-
-    gameInfo->c1NbTreason += 1;
-    gameInfo->c2NbTreason += 1;
-  }
-  // If C1 betray C2, C1 gain C2's bet
-  else if (client1->cooperate == 0 && client2->cooperate == 1) {
-    client1->money += client2->bet;
-
-    gameInfo->c1NbTreason += 1;
-    gameInfo->c2NbCollab += 1;
-  }
-  // If C2 betray C1, C2 gain C1's bet
-  else if (client1->cooperate == 1 && client2->cooperate == 0) {
-    client2->money += client1->bet;
-
-    gameInfo->c1NbCollab += 1;
-    gameInfo->c2NbTreason += 1;
-  }
-  // If they both collaborate
-  else {
-    client1->money += client1->bet;
-    client2->money += client2->bet;
-
-    gameInfo->c1NbCollab += 1;
-    gameInfo->c2NbCollab += 1;
-  }
 }
