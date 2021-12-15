@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
 
   pthread_t thread;
   receiving = malloc(sizeof(dataSentReceived));
-  // sockfd = open_connection();
+  sockfd = open_connection();
   puts("Client is alive");
 
   pthread_create(&thread, 0, threadProcess, &sockfd);
@@ -179,7 +179,6 @@ int main(int argc, char **argv) {
     start_gtk_gui(&argc, &argv);
   }
 
-  
   char *ip = read_config("ip");
   printf("\nip= %s\n", ip);
   char *port = read_config("port");
@@ -191,6 +190,4 @@ int main(int argc, char **argv) {
   int a = verifyIP("caca");
   printf("ipverif: %d\n", a);
 
-
-  return (EXIT_SUCCESS);
 }
