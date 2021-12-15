@@ -14,8 +14,6 @@
 #include "../../../include/client/utils/utils.h"
 #include "../../../include/client/game/main.h"
 
-
-
 /*!
  * \fn void *threadProcess(void *ptr)
  * \author GABETTE Cédric
@@ -28,28 +26,34 @@
 void *threadProcess(void *ptr) {
 
   int sockfd = *((int *)ptr);
-
-  dataSentReceived *sending; 
+  int len;
+  int i = 0;
+  dataSentReceived *sending;
   dataSentReceived *receiving;
+  s_clientData clientData;
 
-  sending = malloc(sizeof(dataSentReceived));
-  receiving = malloc(sizeof(dataSentReceived));
+  while (i < 180) {
+    sending = malloc(sizeof(dataSentReceived));
+    receiving = malloc(sizeof(dataSentReceived));
 
-  write(sockfd, sending, sizeof(dataSentReceived));
-  // read(sockfd, receiving, sizeof(dataSentReceived));
+    if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
+      clientData.baseMoney = receiving->totalMoney;
+      clientData.gameOn = receiving->gameStarted;
+      clientData.roundRemaining = receiving->round;
+    }
 
-  puts("client pthread ended");
+    if (receiving->gameEnded == true) {
+      break;
+    }
 
-  int i=0;
-  while(i < 10000)
-  {
     sleep(1);
     printf("PROCESS %d\n", i);
     i++;
   }
 
+  puts("ThreadProcess ended");
+  close(sockfd);
 }
-
 
 /*!
  * \fn int open_connection()

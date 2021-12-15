@@ -15,7 +15,8 @@
 
 GtkBuilder *builder = NULL;
 int time_remaining = 10;
-int end = 0;
+int len;
+int sockfd;
 s_clientData clientData;
 dataSentReceived *sending;
 dataSentReceived *receiving;
@@ -35,7 +36,7 @@ void on_window_main_destroy() {
 
 /*!
  * \fn int start_countdown()
- * \author Clément Couriol
+ * \author Clément Couriol && Cedric Gabette
  * \version 0.1
  * \date  17/11/2021
  * \brief
@@ -43,14 +44,17 @@ void on_window_main_destroy() {
  * \return
  */
 int start_countdown() {
-  // puts("Timer started");
 
   if (time_remaining == 0) {
-    printf("Round %d\n", end);
-    if (end == 3) {
+    puts("Sending data to server");
+    write(sockfd, sending, sizeof(dataSentReceived));
+
+    clientData.roundRemaining--;
+    time_remaining = 10;
+
+    if (clientData.roundRemaining == 0) {
       gtk_main_quit();
     }
-
     return 0;
   }
 
@@ -150,7 +154,7 @@ void start_gtk_gui(int *ac, char ***av) {
 
 /*!
  * \fn int main(int argc, char **argv)
- * \author Clément Couriol
+ * \author Clément Couriol && Cedric Gabette
  * \version 0.1
  * \date 17/11/2021
  * \brief Main function of the program
@@ -161,18 +165,19 @@ void start_gtk_gui(int *ac, char ***av) {
  */
 
 int main(int argc, char **argv) {
-  int sockfd;
+
   pthread_t thread;
   receiving = malloc(sizeof(dataSentReceived));
-  //sockfd = open_connection();
+  sockfd = open_connection();
   puts("Client is alive");
 
   pthread_create(&thread, 0, threadProcess, &sockfd);
   pthread_detach(thread);
 
-  // if (receiving->gameLaunched == 1) {
-  start_gtk_gui(&argc, &argv);
-  // }
+  if (clientData.gameOn == true) {
+    puts("Game on !");
+    start_gtk_gui(&argc, &argv);
+  }
 
   return (EXIT_SUCCESS);
 }
