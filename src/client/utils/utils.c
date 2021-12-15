@@ -24,31 +24,31 @@
  * \param ptr
  */
 void *threadProcess(void *ptr) {
-  int i=0;
+  int i = 0;
   int len;
   int sockfd = *((int *)ptr);
   dataSentReceived *sending;
   dataSentReceived *receiving;
   s_clientData clientData;
+  sending = malloc(sizeof(dataSentReceived));
+  receiving = malloc(sizeof(dataSentReceived));
 
-  while (i < 180) {
-    sending = malloc(sizeof(dataSentReceived));
-    receiving = malloc(sizeof(dataSentReceived));
+  do {
 
     if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
       clientData.baseMoney = receiving->totalMoney;
       clientData.gameOn = receiving->gameStarted;
       clientData.roundRemaining = receiving->round;
     }
-
     if (receiving->gameEnded == true) {
+      puts("Close");
       break;
     }
 
-      sleep(1);
-      printf("PROCESS %d\n", i);
-      i++;
-  }
+    sleep(1);
+    printf("PROCESS %d\n", i);
+    i++;
+  } while (i < 180);
 }
 
 /*!
