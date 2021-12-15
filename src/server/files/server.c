@@ -207,7 +207,7 @@ void saveOnfile(gameStructure *gameInfo) {
   int nbTotalTreason = gameInfo->c1NbTreason + gameInfo->c2NbTreason;
   int nbTotalCollab = gameInfo->c1NbCollab + gameInfo->c2NbCollab;
 
-  fich = fopen("NOMFICH", "a");
+  fich = fopen("save_games", "a");
   if (fich == NULL) {
     perror("error opening file \n");
     exit(EXIT_FAILURE);
@@ -228,6 +228,100 @@ void saveOnfile(gameStructure *gameInfo) {
 
   fputs("\0", fich);
   fclose(fich);
+}
+
+void fill(clientStructure *client, dataSentReceived *dataRecieved) {
+
+  // Reception and filling of the client structure
+  client->money = dataRecieved->totalMoney;
+  client->cooperate = dataRecieved->cooperate;
+  client->bet = dataRecieved->currentBet;
+  client->isFilled = true;
+}
+
+void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
+
+  clientStructure *client1 = tabClients[client->idClient];
+  clientStructure *client2 = NULL;
+
+  if (client->idClient != gameInfo->iDClient2) {
+    // client->idClient != gameInfo->iDClient1)
+    client2 = tabClients[gameInfo->iDClient2];
+  } else
+    perror("Client non trouvé pour le calcul");
+
+  if (!client1) {
+    pthread_exit(0);
+  }
+  if (!client2) {
+    pthread_exit(0);
+  }
+
+  // we wait for the clients to fill their data
+  while (!(client1->isFilled) && !(client2->isFilled)) {
+    sleep(1);
+  }
+
+  // On retire les sommes pariées des pactoles
+  client1->money -= client1->bet;
+  client2->money -= client1->bet;
+  client1->money -= client1->bet;
+  client2->money -= client2->bet;
+
+  // If they both betray they gain half their bet
+  if (client1->cooperate == 0 && client2->cooperate == client1->cooperate) {
+    client1->money += client1->bet / 2;
+    client2->money += client1->bet / 2;
+
+    gameInfo->c1NbTreason += 1;
+    gameInfo->c2NbTreason += 1;
+  }
+  // If C1 betray C2, C1 gain C2's bet
+  else if (client1->cooperate == 0 && client2->cooperate == 1) {
+    client1->money += client2->bet;
+
+    gameInfo->c1NbTreason += 1;
+    gameInfo->c2NbCollab += 1;
+  }
+  // If C2 betray C1, C2 gain C1's bet
+  else if (client1->cooperate == 1 && client2->cooperate == 0) {
+    client2->money += client1->bet;
+
+    gameInfo->c1NbCollab += 1;
+    gameInfo->c2NbTreason += 1;
+  }
+  // If they both collaborate
+  else {
+    client1->money += client1->bet;
+    client2->money += client2->bet;
+
+    gameInfo->c1NbCollab += 1;
+    gameInfo->c2NbCollab += 1;
+  }
+}
+
+bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
+                    gameStructure *gameInfo, dataSentReceived *dataToSend) {
+  bool hasGameEnded = false;
+
+  fill(client, dataRecieved);
+  // Only one of the clients should use this
+  if ((gameInfo->iDClient1) > (gameInfo->iDClient2)) {
+    if ((tabClients[gameInfo->iDClient1]->isFilled) &&
+        (tabClients[gameInfo->iDClient2]->isFilled)) {
+      profitsCalculation(client, gameInfo);
+      gameInfo->nbrounds = gameInfo->nbrounds - 1;
+      if ((gameInfo->nbrounds) == 0) {
+        hasGameEnded = true;
+      }
+    }
+  }
+  dataToSend->totalMoney = client->money;
+  dataToSend->cooperate = client->cooperate;
+  dataToSend->currentBet = client->bet;
+  client->isFilled = false;
+
+  return hasGameEnded;
 }
 
 void *threadServeur(void *ptr) {
@@ -334,42 +428,4 @@ void *threadServeur(void *ptr) {
     closeAll(connection, gameInfo, dataRecieved, dataToSend, client);
   } else
     closeLocal(connection, gameInfo, dataRecieved, dataToSend, client);
-}
-
-void fill(clientStructure *client, dataSentReceived *dataRecieved) {
-
-  // Reception and filling of the client structure
-  client->money = dataRecieved->totalMoney;
-  client->cooperate = dataRecieved->cooperate;
-  client->bet = dataRecieved->currentBet;
-  client->isFilled = true;
-}
-
-bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
-                    gameStructure *gameInfo, dataSentReceived *dataToSend) {
-  bool hasGameEnded = false;
-
-  fill(client, dataRecieved);
-  // Only one of the clients should use this
-  if ((gameInfo->iDClient1) > (gameInfo->iDClient2)) {
-    if ((tabClients[gameInfo->iDClient1]->isFilled) &&
-        (tabClients[gameInfo->iDClient2]->isFilled)) {
-      profitsCalculation(client, gameInfo);
-      gameInfo->nbrounds = gameInfo->nbrounds - 1;
-      if ((gameInfo->nbrounds) == 0) {
-        hasGameEnded = true;
-      }
-    }
-  }
-  dataToSend->totalMoney = client->money;
-  dataToSend->cooperate = client->cooperate;
-  dataToSend->currentBet = client->bet;
-  if (gameInfo->iDClient1 == client->idClient) {
-    dataToSend->moneyGainLost = client->bet;
-  } else {
-    dataToSend->moneyGainLost = tabClients[gameInfo->iDClient2]->bet;
-  }
-  client->isFilled = false;
-
-  return hasGameEnded;
 }
