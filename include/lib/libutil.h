@@ -6,5 +6,6 @@
 #define LIBUTIL_H
 
 char *read_config(char *param);
+int verifyIP(char *string_ip);
 
 #endif /* LIBUTIL_H */
