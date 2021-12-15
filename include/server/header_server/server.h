@@ -10,9 +10,8 @@
  *
  */
 
+#include "../../lib/libutil.h"
 #include <arpa/inet.h>
-// #include <binn.h>
-// https://github.com/liteserver/binn
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -22,8 +21,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#ifndef SRVCXNMANAGER_H
-#define SRVCXNMANAGER_H
+#ifndef SERVER_H
+#define SERVER_H
 
 #define BUFFERSIZE 2048
 #define MAXSIMULTANEOUSCLIENTS 100
@@ -62,38 +61,41 @@ typedef struct gameStructure {
 // gameLaunched = 1)
 typedef struct dataSentReceived {
   unsigned long currentBet;
-  unsigned long moneyGainLost;
   bool cooperate; // 1 collaborer     0 trahir
   unsigned long totalMoney;
   int iDGame;
   bool gameEnded;
   bool gameStarted;
+  int nbRounds;
 } dataSentReceived;
 
 void init_sockets_array();
-int create_server_socket();
 void add(connection_t *connection);
 void del(connection_t *connection);
+int create_server_socket();
 
 // void *threadProcess(void *ptr);
 
 void createClient(clientStructure *client);
-void addclient(clientStructure *client);
-int verifyNbClients(int clientID);
 void removeClient(int IDClient);
 void disconnectAllClients(gameStructure *game);
-void removeGame(gameStructure *iDGame);
-
+int verifyNbClients(int clientID);
+void initNBRounds();
+int initBaseMoney();
 gameStructure *initGame(int client1ID, int client2ID);
-void profitsCalculation(clientStructure *client, gameStructure *gameInfo);
-void saveOnfile(gameStructure *gameInfo);
-bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
-                    gameStructure *gameInfo, dataSentReceived *dataToSend);
-
-void *threadServeur(void *ptr);
-
+void removeGame(gameStructure *iDGame);
 void closeAll(connection_t *connection, gameStructure *gameInfo,
               dataSentReceived *dataRecieved, dataSentReceived *dataToSend,
               clientStructure *client);
+void closeLocal(connection_t *connection, gameStructure *gameInfo,
+                dataSentReceived *dataRecieved, dataSentReceived *dataToSend,
+                clientStructure *client);
+void initDataToSend(dataSentReceived *dataToSend, clientStructure *client);
+void saveOnfile(gameStructure *gameInfo);
+void *threadServeur(void *ptr);
+void fill(clientStructure *client, dataSentReceived *dataRecieved);
+bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
+                    gameStructure *gameInfo, dataSentReceived *dataToSend);
+void profitsCalculation(clientStructure *client, gameStructure *gameInfo);
 
-#endif /* SRVCXNMANAGER_H */
+#endif /* SERVER_H */

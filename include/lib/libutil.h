@@ -1,5 +1,6 @@
 #include <libconfig.h>
 #include <regex.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #ifndef LIBUTIL_H
