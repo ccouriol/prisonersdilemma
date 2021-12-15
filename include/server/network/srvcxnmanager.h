@@ -55,8 +55,8 @@ typedef struct gameStructure {
   clientStructure *client2;
 } gameStructure;
 
-
-//TODO Envoyer depuis le serveur une valeur pour dire que le jeu est lancé (int gameLaunched = 1)
+// TODO Envoyer depuis le serveur une valeur pour dire que le jeu est lancé (int
+// gameLaunched = 1)
 typedef struct dataSentReceived {
   unsigned long currentBet;
   unsigned long moneyGainLost;

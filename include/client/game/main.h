@@ -3,6 +3,7 @@
 #include <stdlib.h>
 // #include <glib-2.0/glib.h>
 // #include <gtk-3.0/gtk/gtk.h>
+#include "../../../include/lib/libutil.h"
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -14,6 +15,7 @@
 #define MAIN_H
 
 #define BUFFERSIZE 2048
+#define ROUND_MAX 3
 
 void *threadProcess(void *ptr);
 int open_connection();
@@ -31,6 +33,8 @@ typedef struct {
   bool gameLaunched;
 } c_clientInfo;
 
+// TODO Envoyer depuis le serveur une valeur pour dire que le jeu est lancé (int
+// gameLaunched = 1)
 typedef struct dataSentReceived {
   unsigned long currentBet;
   unsigned long moneyGainLost;
