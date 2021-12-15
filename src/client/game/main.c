@@ -68,7 +68,6 @@ int start_countdown() {
     snprintf(timer_text, 5, "%i", time_remaining);
     gtk_label_set_text(timelabel, timer_text);
   }
-
   return 1;
 }
 
@@ -174,11 +173,6 @@ int main(int argc, char **argv) {
   pthread_create(&thread, 0, threadProcess, &sockfd);
   pthread_detach(thread);
 
-  if (clientData.gameOn == true) {
-    puts("Game on !");
-    start_gtk_gui(&argc, &argv);
-  }
-
   char *ip = read_config("ip");
   printf("\nip= %s\n", ip);
   char *port = read_config("port");
@@ -187,7 +181,17 @@ int main(int argc, char **argv) {
   printf("\nport= %s\n", rounds);
   char *basemoney = read_config("basemoney");
   printf("\nport= %s\n", basemoney);
-  int a = verifyIP("caca");
+  int a = verifyIP("test");
   printf("ipverif: %d\n", a);
 
+  do {
+  if ((len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0)) {
+  if (receiving->gameStarted == true) {
+    puts("Game on !");
+    start_gtk_gui(&argc, &argv);
+    break;
+  }
+  }
+  } while(1);
+  
 }
