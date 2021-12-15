@@ -73,6 +73,10 @@ int create_server_socket() {
   return sockfd;
 }
 
+void initNBRounds() { NBROUNDS = atoi(read_config("rounds")); }
+
+int initBaseMoney() { return atoi(read_config("basemoney")); }
+
 void createClient(clientStructure *client) {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (tabClients[i] == NULL) {
@@ -122,10 +126,6 @@ int verifyNbClients(int clientID) {
   }
   return ret;
 }
-
-void initNBRounds() { NBROUNDS = atoi(read_config("rounds")); }
-
-int initBaseMoney() { return atoi(read_config("basemoney")); }
 
 gameStructure *initGame(int client1ID, int client2ID) {
 
@@ -337,6 +337,8 @@ void *threadServeur(void *ptr) {
   connection_t *connection = NULL;
   gameStructure *gameInfo = NULL;
   // gameInfo = malloc(sizeof(gameStructure));
+
+  initNBRounds();
 
   if (!ptr)
     pthread_exit(0);
