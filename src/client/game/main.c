@@ -15,7 +15,10 @@
 
 GtkBuilder *builder = NULL;
 int time_remaining = 10;
+int end = 0;
 s_clientData clientData;
+dataSentReceived *sending;
+dataSentReceived *receiving;
 
 /*!
  * \fn void on_window_main_destroy()
@@ -41,6 +44,16 @@ void on_window_main_destroy() {
  */
 int start_countdown() {
   // puts("Timer started");
+
+  if (time_remaining == 0) {
+    printf("Round %d\n", end);
+    if (end == 3) {
+      gtk_main_quit();
+    }
+
+    return 0;
+  }
+
   if (time_remaining > 0) {
     time_remaining--;
     char timer_text[5];
@@ -51,6 +64,7 @@ int start_countdown() {
     snprintf(timer_text, 5, "%i", time_remaining);
     gtk_label_set_text(timelabel, timer_text);
   }
+
   return 1;
 }
 
@@ -122,7 +136,7 @@ void start_gtk_gui(int *ac, char ***av) {
 
   gtk_builder_connect_signals(builder, NULL);
   gtk_widget_show(win);
-  if (time_remaining > 0) {
+  if (time_remaining >= 0) {
     g_timeout_add(1000, (GSourceFunc)start_countdown, NULL);
     start_countdown();
   }
@@ -145,40 +159,16 @@ void start_gtk_gui(int *ac, char ***av) {
  * \param *argv
  * \return 0 if all went good
  */
+
 int main(int argc, char **argv) {
   int sockfd;
-  long int status = 0;
-  char msg[100];
   pthread_t thread;
+  receiving = malloc(sizeof(dataSentReceived));
+  // sockfd = open_connection();
+  puts("Client is alive");
 
-  sockfd = open_connection();
-  strcpy(msg, "Hello from Player1"); // Xeon is the name of the this client
-  printf("sending : %s\n", msg);
-  write(sockfd, msg, strlen(msg));
-
-  // phthread created for reading
   pthread_create(&thread, 0, threadProcess, &sockfd);
-  // write(connection->sock,"Main APP Still running",15);
   pthread_detach(thread);
-  do {
-    fgets(msg, 100, stdin);
-    // printf("sending : %s\n", msg);
-    status = write(sockfd, msg, strlen(msg));
-    // memset(msg,'\0',100);
-  } while (status != -1);
-
-  status = 0;
-
-  // phthread created to launch the game
-  pthread_create(&thread, 0, threadIsGame, &sockfd);
-  // write(connection->sock, "<IdGame>")
-  pthread_detach(thread);
-  do {
-    fgets(msg, 100, stdin);
-    // printf("sending : %s\n", msg);
-    status = write(sockfd, msg, strlen(msg));
-    // memset(msg,'\0',100);
-  } while (status != -1);
 
   char *ip = read_config("ip");
   printf("\nip= %s\n", ip);
@@ -190,7 +180,9 @@ int main(int argc, char **argv) {
   printf("\nport= %s\n", basemoney);
   int a = verifyIP("caca");
   printf("ipverif: %d\n", a);
+  // if (receiving->gameLaunched == 1) {
   start_gtk_gui(&argc, &argv);
+  // }
 
   return (EXIT_SUCCESS);
 }

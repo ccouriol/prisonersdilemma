@@ -24,52 +24,26 @@
  * \param ptr
  */
 void *threadProcess(void *ptr) {
-  char buffer_in[BUFFERSIZE];
-  int sockfd = *((int *)ptr);
-  long int len;
-  while ((len = read(sockfd, buffer_in, BUFFERSIZE)) != 0) {
-    if (strncmp(buffer_in, "exit", 4) == 0) {
-      break;
-    }
 
-    printf("receive %ld chars\n", len);
-    printf("%.*s\n", (int)len, buffer_in);
-  }
-  close(sockfd);
-  printf("client pthread ended, len=%ld\n", len);
-}
-
-/*!
- * \fn void *threadIsGame(void *ptr)
- * \author GABETTE Cédric
- * \version 0.1
- * \date  26/11/2021
- * \brief Thread for collecting the id of the game and acknowledge it to the
- * server \remarks None \param ptr
- */
-void *threadIsGame(void *ptr) {
-  char buffer_in[BUFFERSIZE];
-  char buffer_out[BUFFERSIZE];
-  char idGame[BUFFERSIZE];
-  char IsGame;
-  char ask = '?';
-  long int len;
   int sockfd = *((int *)ptr);
 
-  while ((len = read(sockfd, buffer_in, BUFFERSIZE)) != 0) {
-    if (recv(sockfd, idGame, BUFFERSIZE, 0) < 0) {
-      puts("recv failed");
-    }
-    puts("replied recieved");
-  }
+  dataSentReceived *sending;
+  dataSentReceived *receiving;
 
-  if (send(sockfd, idGame, strlen(idGame), 0) < 0) {
-    puts("Send failed");
-  }
-  puts("Send recieved");
+  sending = malloc(sizeof(dataSentReceived));
+  receiving = malloc(sizeof(dataSentReceived));
 
-  close(sockfd);
-  printf("client pthread ended, len=%ld\n", len);
+  write(sockfd, sending, sizeof(dataSentReceived));
+  // read(sockfd, receiving, sizeof(dataSentReceived));
+
+  puts("client pthread ended");
+
+  int i = 0;
+  while (i < 10000) {
+    sleep(1);
+    printf("PROCESS %d\n", i);
+    i++;
+  }
 }
 
 /*!
