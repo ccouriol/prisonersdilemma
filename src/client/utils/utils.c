@@ -24,7 +24,8 @@
  * \param ptr
  */
 void *threadProcess(void *ptr) {
-
+  int i=0;
+  int len;
   int sockfd = *((int *)ptr);
   dataSentReceived *sending;
   dataSentReceived *receiving;
@@ -44,11 +45,12 @@ void *threadProcess(void *ptr) {
       break;
     }
 
-  int i = 0;
-  while (i < 10000) {
-    sleep(1);
-    printf("PROCESS %d\n", i);
-    i++;
+    int i = 0;
+    while (i < 10000) {
+      sleep(1);
+      printf("PROCESS %d\n", i);
+      i++;
+    }
   }
 }
 
