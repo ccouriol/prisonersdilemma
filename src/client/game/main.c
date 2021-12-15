@@ -17,6 +17,7 @@ GtkBuilder *builder = NULL;
 int time_remaining = 10;
 int len;
 int sockfd;
+int roundLeft = 3;
 s_clientData clientData;
 dataSentReceived *sending;
 dataSentReceived *receiving;
@@ -49,13 +50,13 @@ int start_countdown() {
     puts("Sending data to server");
     write(sockfd, sending, sizeof(dataSentReceived));
 
-    clientData.roundRemaining--;
+    roundLeft--;
     time_remaining = 10;
 
-    if (clientData.roundRemaining == 0) {
+    if (roundLeft == 0) {
       gtk_main_quit();
+      return 0;
     }
-    return 0;
   }
 
   if (time_remaining > 0) {
@@ -167,7 +168,7 @@ int main(int argc, char **argv) {
 
   pthread_t thread;
   receiving = malloc(sizeof(dataSentReceived));
-  sockfd = open_connection();
+  // sockfd = open_connection();
   puts("Client is alive");
 
   pthread_create(&thread, 0, threadProcess, &sockfd);
@@ -185,13 +186,12 @@ int main(int argc, char **argv) {
   printf("ipverif: %d\n", a);
 
   do {
-  if ((len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0)) {
-  if (receiving->gameStarted == true) {
-    puts("Game on !");
-    start_gtk_gui(&argc, &argv);
-    break;
-  }
-  }
-  } while(1);
-  
+    if ((len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0)) {
+      if (receiving->gameStarted == false) {
+        puts("Game on !");
+        start_gtk_gui(&argc, &argv);
+        break;
+      }
+    }
+  } while (1);
 }
