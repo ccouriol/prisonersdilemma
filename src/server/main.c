@@ -19,7 +19,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "../../include/server/network/srvcxnmanager.h"
+#include "../../include/server/header_server/server.h"
 
 /*
  * File:   main.c
