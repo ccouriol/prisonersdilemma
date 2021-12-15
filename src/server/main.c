@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
       // start a new thread but do not wait for it
       // pthread_create(&thread, 0, threadProcess, (void *)connection);
       pthread_create(&thread, 0, threadServeur, (void *)connection);
-
+      sleep(1);
       pthread_detach(thread);
     }
     

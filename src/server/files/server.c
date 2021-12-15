@@ -145,7 +145,7 @@ gameStructure *initGame(int client1ID, int client2ID) {
 
   for (int i = 0; i < MAXSIMULTANEAOUSGAMES; i++) {
     if (games[i] == NULL && (game->iDClient1 >= 0) && (game->iDClient2 >= 0)) {
-      game->idGame = i;
+      game->idGame = i+1;
       tabClients[client1ID]->isInGame = true;
       tabClients[client2ID]->isInGame = true;
       games[i] = game;
@@ -334,9 +334,9 @@ void *threadServeur(void *ptr) {
   bool hasGameEnded = false;
   int otherClientID = -1;
   size_t len, sizebufferData = sizeof(dataSentReceived);
-  connection_t *connection = NULL;
-  gameStructure *gameInfo = NULL;
-  // gameInfo = malloc(sizeof(gameStructure));
+  connection_t *connection;
+  gameStructure *gameInfo;
+  gameInfo = malloc(sizeof(gameStructure));
 
   initNBRounds();
 
@@ -368,23 +368,24 @@ void *threadServeur(void *ptr) {
     }
   }
 
-  if (!gameInfo) {
-    perror("Error: No game initialized");
+  if (gameInfo < 0) {
+    perror("Error: No game initialized...");
     exit(64);
   }
 
-  gameInfo->iDClient1 = 10;
+  // gameInfo->iDClient1 = 10; //? Clang tidy me trouve les segfaults
 
   // sendind the game ID to tell the client the game has started
   dataToSend->currentBet = 0;
-  dataToSend->moneyGainLost = 0;
   dataToSend->cooperate = false; // 1 collaborer     0 trahir
-  dataToSend->totalMoney = 0;
-  dataToSend->iDGame = gameInfo->idGame;
+  dataToSend->totalMoney = 1000;
+  // dataToSend->iDGame = gameInfo->idGame;//? Clang tidy me trouve les segfaults
   dataToSend->gameEnded = false;
   dataToSend->gameStarted = true;
+  for(int i=0; i < 100; i++) {
   write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
-
+  }
+  puts("writen");
   // #if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
@@ -395,15 +396,15 @@ void *threadServeur(void *ptr) {
   printf("Game Ended ? %d\n", dataToSend->gameEnded);
   printf("----------------------------------------------------------------\n");
   // #endif
-
-  while (!hasGameEnded) {
+  int repet=0;
+  while (repet < 10) {
     read(connection->sockfd, dataRecieved, (sizeof(dataSentReceived)));
+    puts("has read");
     // #if DEBUG
     printf(
         "DEBUG-----------------------------------------------------------\n");
     printf("Data Received:\n");
     printf("CurrentBet: %lu \n", dataRecieved->currentBet);
-    printf("Money Lost: %lu \n", dataRecieved->moneyGainLost);
     printf("Choice: %d \n", dataRecieved->cooperate);
     printf("TotalMoney: %lu \n", dataRecieved->totalMoney);
     printf("IDGame: %d \n", dataRecieved->iDGame);
@@ -413,8 +414,9 @@ void *threadServeur(void *ptr) {
     // #endif
 
     hasGameEnded = computeAndSend(client, dataRecieved, gameInfo, dataToSend);
+    repet++;
 
-    write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
+    //write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   }
   //#if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");

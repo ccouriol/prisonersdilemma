@@ -38,12 +38,17 @@ void *threadProcess(void *ptr) {
     if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
       clientData.baseMoney = receiving->totalMoney;
       clientData.gameOn = receiving->gameStarted;
-      clientData.roundRemaining = receiving->round;
     }
     if (receiving->gameEnded == true) {
       puts("Close");
       break;
     }
+
+    printf("current %d\n", receiving->currentBet);
+    printf("started %d\n", receiving->gameStarted);
+    printf("round %d\n", receiving->round);
+    printf("id %d\n", receiving->iDGame);
+    printf("total %d\n", receiving->totalMoney);
 
     sleep(1);
     printf("PROCESS %d\n", i);
