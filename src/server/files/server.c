@@ -88,7 +88,7 @@ void createClient(clientStructure *client) {
       return;
     }
   }
-  perror("Too much simultaneous clients");
+  perror("Too much simultaneous clients\n");
   exit(15);
 }
 
@@ -118,42 +118,49 @@ int verifyNbClients(int clientID) {
   int ret = -1;
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
-    if ((tabClients[i] != NULL) && (tabClients[i]->idClient != clientID) &&
-        (tabClients[i]->isInGame == false)) {
-      ret = i;
+    if ((tabClients[i] != NULL)) {
+      if ((tabClients[i]->idClient != clientID) &&
+          (tabClients[i]->isInGame == false)) {
+        ret = i;
+      }
       return ret; // return the index of an available client
     }
   }
+  printf("Client pas dans table\n");
   return ret;
 }
 
 gameStructure *initGame(int client1ID, int client2ID) {
 
-  gameStructure *game = malloc(sizeof(gameStructure));
+  gameStructure *game = NULL;
 
-  if (!game)
-    pthread_exit(0);
+  game = malloc(sizeof(gameStructure));
 
-  game->iDClient1 = client1ID;
-  game->iDClient2 = client2ID;
-  game->c1NbCollab = 0;
-  game->c1NbTreason = 0;
-  game->c2NbCollab = 0;
-  game->c2NbTreason = 0;
-  game->nbrounds = NBROUNDS;
-  // TODO: change this for config file reading
+  if (game != NULL) {
 
-  for (int i = 0; i < MAXSIMULTANEAOUSGAMES; i++) {
-    if (games[i] == NULL && (game->iDClient1 >= 0) && (game->iDClient2 >= 0)) {
-      game->idGame = i;
-      tabClients[client1ID]->isInGame = true;
-      tabClients[client2ID]->isInGame = true;
-      games[i] = game;
-      return game;
+    game->iDClient1 = client1ID;
+    game->iDClient2 = client2ID;
+    game->c1NbCollab = 0;
+    game->c1NbTreason = 0;
+    game->c2NbCollab = 0;
+    game->c2NbTreason = 0;
+    game->nbrounds = NBROUNDS;
+    // TODO: change this for config file reading
+
+    for (int i = 0; i < MAXSIMULTANEAOUSGAMES; i++) {
+      if (games[i] == NULL && (game->iDClient1 >= 0) &&
+          (game->iDClient2 >= 0)) {
+        game->idGame = i;
+        tabClients[client1ID]->isInGame = true;
+        tabClients[client2ID]->isInGame = true;
+        games[i] = game;
+        return (game);
+      }
     }
+  } else {
+    perror("No game initialized\n");
+    exit(63);
   }
-  perror("No game initialized");
-  exit(-5);
 }
 
 void removeGame(gameStructure *iDGame) {
@@ -336,7 +343,6 @@ void *threadServeur(void *ptr) {
   size_t len, sizebufferData = sizeof(dataSentReceived);
   connection_t *connection = NULL;
   gameStructure *gameInfo = NULL;
-  // gameInfo = malloc(sizeof(gameStructure));
 
   initNBRounds();
 
@@ -363,15 +369,20 @@ void *threadServeur(void *ptr) {
   while (!(client->isInGame)) {
     otherClientID = verifyNbClients(client->idClient);
 
-    if ((otherClientID != -1) && ((client->idClient) > (otherClientID))) {
-      gameInfo = initGame((client->idClient), otherClientID);
+    if (otherClientID != -1) {
+      if ((client->idClient) > (otherClientID)) {
+        gameInfo = initGame((client->idClient), otherClientID);
+        break;
+      }
     }
   }
 
-  if (!gameInfo) {
-    perror("Error: No game initialized");
-    exit(64);
+  if (gameInfo == NULL) {
+    perror("Error: No game initialized\n");
+    exit(69);
   }
+
+  printf("GINFO:%p, ID: %d\n", gameInfo, gameInfo->idGame);
 
   initDataToSend(dataToSend, client);
   write(connection->sockfd, dataToSend, sizebufferData);
@@ -388,6 +399,7 @@ void *threadServeur(void *ptr) {
 #endif
 
   while (!hasGameEnded) {
+    printf("COUCOU C'EST LA FIN DE GAME EN ATTENTE\n");
 
     if ((len = read(connection->sockfd, dataRecieved, sizebufferData)) > 0) {
 
