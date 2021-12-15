@@ -180,6 +180,16 @@ int main(int argc, char **argv) {
     // memset(msg,'\0',100);
   } while (status != -1);
 
+  char *ip = read_config("ip");
+  printf("\nip= %s\n", ip);
+  char *port = read_config("port");
+  printf("\nport= %s\n", port);
+  char *rounds = read_config("rounds");
+  printf("\nport= %s\n", rounds);
+  char *basemoney = read_config("basemoney");
+  printf("\nport= %s\n", basemoney);
+  int a = verifyIP("caca");
+  printf("ipverif: %d\n", a);
   start_gtk_gui(&argc, &argv);
 
   return (EXIT_SUCCESS);
