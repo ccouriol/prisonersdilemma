@@ -18,10 +18,10 @@ LFLAGS = -lpthread
 OUTPUT	:= ../../output
 
 # define source directory
-SRC		:= ./
+SRC		:= ./ ../../include/lib
 
 # define include directory
-INCLUDE	:= ../../include/client
+INCLUDE	:= ../../include/server
 
 # define lib directory
 LIB		:= ../../lib
