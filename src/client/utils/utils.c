@@ -14,8 +14,6 @@
 #include "../../../include/client/utils/utils.h"
 #include "../../../include/client/game/main.h"
 
-
-
 /*!
  * \fn void *threadProcess(void *ptr)
  * \author GABETTE Cédric
@@ -28,28 +26,31 @@
 void *threadProcess(void *ptr) {
 
   int sockfd = *((int *)ptr);
-
-  dataSentReceived *sending; 
+  dataSentReceived *sending;
   dataSentReceived *receiving;
+  s_clientData clientData;
 
-  sending = malloc(sizeof(dataSentReceived));
-  receiving = malloc(sizeof(dataSentReceived));
+  while (i < 180) {
+    sending = malloc(sizeof(dataSentReceived));
+    receiving = malloc(sizeof(dataSentReceived));
 
-  write(sockfd, sending, sizeof(dataSentReceived));
-  // read(sockfd, receiving, sizeof(dataSentReceived));
+    if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
+      clientData.baseMoney = receiving->totalMoney;
+      clientData.gameOn = receiving->gameStarted;
+      clientData.roundRemaining = receiving->round;
+    }
 
-  puts("client pthread ended");
+    if (receiving->gameEnded == true) {
+      break;
+    }
 
-  int i=0;
-  while(i < 10000)
-  {
+  int i = 0;
+  while (i < 10000) {
     sleep(1);
     printf("PROCESS %d\n", i);
     i++;
   }
-
 }
-
 
 /*!
  * \fn int open_connection()
@@ -87,35 +88,4 @@ int open_connection() {
   };
 
   return sockfd;
-}
-
-/*!
- * \fn int verifyIP(char *string_ip)
- * \author Clément Couriol
- * \version 0.1
- * \date  01/12/2021
- * \brief Returns 0 if the ip is valid, 1 if not
- * \remarks None
- * \param string_ip
- * \return
- */
-int verifyIP(char *string_ip) {
-  regex_t regex;
-  int reti;
-  char *rgx = "^(\\b25[0-5]|\\b2[0-4][0-9]|\\b[01]?[0-9][0-9]?)(\\.(25[0-5]|2["
-              "0-4][0-9]|[01]?[0-9][0-9]?)){3}$";
-
-  reti = regcomp(&regex, rgx, REG_EXTENDED);
-  if (reti)
-    return EXIT_FAILURE;
-
-  reti = regexec(&regex, string_ip, 0, NULL, 0);
-  if (!reti)
-    return EXIT_SUCCESS;
-  else if (reti == REG_NOMATCH)
-    return EXIT_FAILURE;
-  else
-    return EXIT_FAILURE;
-
-  regfree(&regex);
 }
