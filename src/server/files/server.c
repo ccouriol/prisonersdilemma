@@ -377,7 +377,6 @@ void *threadServeur(void *ptr) {
 
   // sendind the game ID to tell the client the game has started
   dataToSend->currentBet = 0;
-  dataToSend->moneyGainLost = 0;
   dataToSend->cooperate = false; // 1 collaborer     0 trahir
   dataToSend->totalMoney = 0;
   dataToSend->iDGame = gameInfo->idGame;
@@ -403,7 +402,6 @@ void *threadServeur(void *ptr) {
         "DEBUG-----------------------------------------------------------\n");
     printf("Data Received:\n");
     printf("CurrentBet: %lu \n", dataRecieved->currentBet);
-    printf("Money Lost: %lu \n", dataRecieved->moneyGainLost);
     printf("Choice: %d \n", dataRecieved->cooperate);
     printf("TotalMoney: %lu \n", dataRecieved->totalMoney);
     printf("IDGame: %d \n", dataRecieved->iDGame);
