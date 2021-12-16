@@ -28,24 +28,6 @@
 #define MAXSIMULTANEOUSCLIENTS 100
 #define MAXSIMULTANEAOUSGAMES 50
 
-// client envoie choix, mise et pactole
-// serveur envoie Nouveau Pactole
-typedef struct clientStructure {
-  bool isInGame;
-  int idClient;
-  bool cooperate;
-  unsigned long bet;
-  unsigned long money;
-  bool isFilled;
-} clientStructure;
-
-typedef struct {
-  int sockfd;
-  struct sockaddr address;
-  int addr_len;
-  int index;
-} connection_t;
-
 typedef struct gameStructure {
   int idGame;
   int c1NbTreason;
@@ -57,11 +39,30 @@ typedef struct gameStructure {
   int nbrounds;
 } gameStructure;
 
+// client envoie choix, mise et pactole
+// serveur envoie Nouveau Pactole
+typedef struct clientStructure {
+  bool isInGame;
+  int idClient;
+  bool cooperate;
+  unsigned long bet;
+  unsigned long money;
+  bool isFilled;
+  gameStructure *gameP;
+  bool canFree;
+} clientStructure;
+
+typedef struct {
+  int sockfd;
+  struct sockaddr address;
+  int addr_len;
+  int index;
+} connection_t;
+
 typedef struct dataSentReceived {
   unsigned long currentBet;
   bool cooperate; // 1 collaborer     0 trahir
   unsigned long totalMoney;
-  int iDGame;
   bool gameEnded;
   bool gameStarted;
   int nbRounds;
@@ -80,14 +81,13 @@ void disconnectAllClients(gameStructure *game);
 int verifyNbClients(int clientID);
 void initNBRounds();
 int initBaseMoney();
-gameStructure *initGame(int client1ID, int client2ID);
+void initGame(int client1ID, int client2ID);
 void removeGame(gameStructure *iDGame);
 void closeAll(connection_t *connection, gameStructure *gameInfo,
               dataSentReceived *dataRecieved, dataSentReceived *dataToSend,
               clientStructure *client);
-void closeLocal(connection_t *connection, gameStructure *gameInfo,
-                dataSentReceived *dataRecieved, dataSentReceived *dataToSend,
-                clientStructure *client);
+void closeLocal(connection_t *connection, dataSentReceived *dataRecieved,
+                dataSentReceived *dataToSend, clientStructure *client);
 void initDataToSend(dataSentReceived *dataToSend, clientStructure *client);
 void saveOnfile(gameStructure *gameInfo);
 void *threadServeur(void *ptr);
