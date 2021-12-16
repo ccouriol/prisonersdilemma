@@ -224,12 +224,13 @@ void initDataToSend(dataSentReceived *dataToSend, clientStructure *client) {
 
 // TODO: upgrade for a better filename
 void saveOnfile(gameStructure *gameInfo) {
+  printf("GEN FICHIER\n");
 
   FILE *fich;
   int nbTotalTreason = gameInfo->c1NbTreason + gameInfo->c2NbTreason;
   int nbTotalCollab = gameInfo->c1NbCollab + gameInfo->c2NbCollab;
 
-  fich = fopen("save_games", "a");
+  fich = fopen("../save_games", "a");
   if (fich == NULL) {
     perror("error opening file \n");
     exit(EXIT_FAILURE);
@@ -328,13 +329,19 @@ bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
 
   fill(client, dataRecieved);
   // Only one of the clients should use this
+  printf("FILLED\n");
   if ((gameInfo->iDClient1) > (gameInfo->iDClient2)) {
+    printf("1\n");
     if ((tabClients[gameInfo->iDClient1]->isFilled) &&
         (tabClients[gameInfo->iDClient2]->isFilled)) {
+      // TODO/ RENTRE JAMAIS ICI, CORRIGER
+
       profitsCalculation(client, gameInfo);
       gameInfo->nbrounds = gameInfo->nbrounds - 1;
+      printf("\nNBROUNDS:%d\n", gameInfo->nbrounds);
       if ((gameInfo->nbrounds) == 0) {
         hasGameEnded = true;
+        dataToSend->gameEnded = true;
       }
     }
   }
@@ -355,7 +362,8 @@ void *threadServeur(void *ptr) {
 
   bool hasGameEnded = false;
   int otherClientID = -1;
-  size_t len, sizebufferData = sizeof(dataSentReceived);
+  ssize_t len;
+  size_t sizebufferData = sizeof(dataSentReceived);
   connection_t *connection = NULL;
   gameStructure *gameInfo = NULL;
 
@@ -403,7 +411,14 @@ void *threadServeur(void *ptr) {
   // printf("JE suis:%d\n", client->idClient);
 
   initDataToSend(dataToSend, client);
-  write(connection->sockfd, dataToSend, sizebufferData);
+  printf("Data sent:\n");
+  printf("CurrentBet: %lu \n", dataToSend->currentBet);
+  printf("Choice: %d \n", dataToSend->cooperate);
+  printf("TotalMoney: %lu \n", dataToSend->totalMoney);
+  printf("Game started ? %d\n", dataToSend->gameStarted);
+
+  for (int i = 0; i < 2; i++)
+    write(connection->sockfd, dataToSend, sizebufferData);
 
 #if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
@@ -411,20 +426,35 @@ void *threadServeur(void *ptr) {
   printf("CurrentBet: %lu \n", dataToSend->currentBet);
   printf("Choice: %d \n", dataToSend->cooperate);
   printf("TotalMoney: %lu \n", dataToSend->totalMoney);
-  printf("IDGame: %d \n", dataToSend->iDGame);
   printf("Game Ended ? %d\n", dataToSend->gameEnded);
   printf("----------------------------------------------------------------\n");
 #endif
 
   while (!hasGameEnded) {
+    printf("ATENTTE\n");
+    len = read(connection->sockfd, dataRecieved, sizebufferData);
 
-    if ((len = read(connection->sockfd, dataRecieved, sizebufferData)) > 0) {
+    if (len > 0) {
+      printf("CurrentBetACALC: %lu \n", dataRecieved->currentBet);
+      printf("ChoiceACALC: %d \n", dataRecieved->cooperate);
+      printf("TotalMoneyACALC: %lu \n", dataRecieved->totalMoney);
+
       hasGameEnded = computeAndSend(client, dataRecieved, gameInfo, dataToSend);
+      printf("Game Ended ? %d\n", dataRecieved->gameEnded);
       write(connection->sockfd, dataToSend, sizebufferData);
     }
     if (len == 0) {
       printf("Client disconnected\n");
       if (client->canFree) {
+        if (hasGameEnded)
+          saveOnfile(gameInfo);
+        closeAll(connection, gameInfo, dataRecieved, dataToSend, client);
+      } else
+        closeLocal(connection, dataRecieved, dataToSend, client);
+    }
+    if (hasGameEnded) {
+      if (client->canFree) {
+        saveOnfile(gameInfo);
         closeAll(connection, gameInfo, dataRecieved, dataToSend, client);
       } else
         closeLocal(connection, dataRecieved, dataToSend, client);
@@ -437,7 +467,6 @@ void *threadServeur(void *ptr) {
   printf("CurrentBet: %lu \n", dataRecieved->currentBet);
   printf("Choice: %d \n", dataRecieved->cooperate);
   printf("TotalMoney: %lu \n", dataRecieved->totalMoney);
-  printf("IDGame: %d \n", dataRecieved->iDGame);
   printf("Game Ended ? %d\n", dataRecieved->gameEnded);
   printf("----------------------------------------------------------------\n");
   printf("DEBUG-----------------------------------------------------------\n");
@@ -445,7 +474,6 @@ void *threadServeur(void *ptr) {
   printf("CurrentBet: %lu \n", dataToSend->currentBet);
   printf("Choice: %d \n", dataToSend->cooperate);
   printf("TotalMoney: %lu \n", dataToSend->totalMoney);
-  printf("IDGame: %d \n", dataToSend->iDGame);
   printf("Game Ended ? %d\n", dataToSend->gameEnded);
   printf("----------------------------------------------------------------\n");
 #endif

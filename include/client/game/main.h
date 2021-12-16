@@ -1,3 +1,5 @@
+// MAIN CLIENT .h
+
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,14 +29,23 @@ typedef struct s_clientData {
   bool gameOn;
 } s_clientData;
 
+// typedef struct dataSentReceived {
+//   unsigned long currentBet;
+//   unsigned long totalMoney;
+//   unsigned short round;
+//   int iDGame;
+//   bool cooperate;
+//   bool gameStarted;
+//   bool gameEnded;
+// } dataSentReceived;
+
 typedef struct dataSentReceived {
   unsigned long currentBet;
+  bool cooperate; // 1 collaborer     0 trahir
   unsigned long totalMoney;
-  unsigned short round;
-  int iDGame;
-  bool cooperate;
-  bool gameStarted;
   bool gameEnded;
+  bool gameStarted;
+  int nbRounds;
 } dataSentReceived;
 
 #endif // MAIN_H
