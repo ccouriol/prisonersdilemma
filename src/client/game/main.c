@@ -22,6 +22,28 @@ s_clientData clientData;
 dataSentReceived *sending;
 dataSentReceived *receiving;
 
+
+void sendData() {
+
+  sending = malloc(sizeof(s_clientData));
+
+  sending->cooperate = clientData.cooperate;
+  sending->currentBet = clientData.currentBet;
+  sending->round = clientData.roundRemaining;
+  sending->gameStarted = clientData.gameOn;
+  sending->totalMoney = clientData.baseMoney;
+
+  // printf("coop %d\n",sending->cooperate);
+  // printf("bet %d\n",sending->currentBet);
+  // printf("round %d\n",sending->round);
+  // printf("game %d\n",sending->gameStarted);
+  // printf("total %d\n",sending->totalMoney);
+
+  write(sockfd, sending, sizeof(dataSentReceived));
+  
+}
+
+
 /*!
  * \fn void on_window_main_destroy()
  * \author Clément Couriol
@@ -48,7 +70,7 @@ int start_countdown() {
 
   if (time_remaining == 0) {
     puts("Sending data to server");
-    write(sockfd, sending, sizeof(dataSentReceived));
+    sendData();
 
     roundLeft--;
     time_remaining = 10;
@@ -168,7 +190,8 @@ int main(int argc, char **argv) {
 
   pthread_t thread;
   receiving = malloc(sizeof(dataSentReceived));
-  // sockfd = open_connection();
+  receiving->gameStarted = false;
+  sockfd = open_connection();
   puts("Client is alive");
 
   pthread_create(&thread, 0, threadProcess, &sockfd);
@@ -186,12 +209,12 @@ int main(int argc, char **argv) {
   printf("ipverif: %d\n", a);
 
   do {
-    if ((len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0)) {
-      if (receiving->gameStarted == false) {
+     if ((len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0)) {
+      if (receiving->gameStarted == true) {
         puts("Game on !");
         start_gtk_gui(&argc, &argv);
         break;
       }
-    }
+     }
   } while (1);
 }
