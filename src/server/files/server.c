@@ -83,6 +83,7 @@ void createClient(clientStructure *client) {
       client->idClient = i;
       client->isInGame = false;
       client->isFilled = false;
+      client->canFree = false;
       client->money = initBaseMoney();
       tabClients[i] = client;
       return;
@@ -93,17 +94,21 @@ void createClient(clientStructure *client) {
 }
 
 void removeClient(int IDClient) {
+
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (i == IDClient) {
       tabClients[i] = NULL;
       return;
     }
-    perror("Client not in pool");
-    exit(50);
   }
+  perror("Client not in pool\n");
+  exit(50);
 }
 
 void disconnectAllClients(gameStructure *game) {
+  if (game == NULL) {
+    return;
+  }
   removeClient(game->iDClient1);
   removeClient(game->iDClient2);
 }
@@ -130,7 +135,7 @@ int verifyNbClients(int clientID) {
   return ret;
 }
 
-gameStructure *initGame(int client1ID, int client2ID) {
+void initGame(int client1ID, int client2ID) {
 
   gameStructure *game = NULL;
 
@@ -145,7 +150,11 @@ gameStructure *initGame(int client1ID, int client2ID) {
     game->c2NbCollab = 0;
     game->c2NbTreason = 0;
     game->nbrounds = NBROUNDS;
-    // TODO: change this for config file reading
+
+    if ((client1ID) > (client2ID)) {
+      tabClients[client1ID]->canFree = true;
+    } else
+      tabClients[client2ID]->canFree = true;
 
     for (int i = 0; i < MAXSIMULTANEAOUSGAMES; i++) {
       if (games[i] == NULL && (game->iDClient1 >= 0) &&
@@ -154,7 +163,9 @@ gameStructure *initGame(int client1ID, int client2ID) {
         tabClients[client1ID]->isInGame = true;
         tabClients[client2ID]->isInGame = true;
         games[i] = game;
-        return (game);
+        tabClients[client1ID]->gameP = game;
+        tabClients[client2ID]->gameP = game;
+        return;
       }
     }
   } else {
@@ -163,14 +174,18 @@ gameStructure *initGame(int client1ID, int client2ID) {
   }
 }
 
-void removeGame(gameStructure *iDGame) {
+void removeGame(gameStructure *gameInfo) {
+  if (gameInfo == NULL) {
+    perror("Game not in pool");
+    exit(80);
+  }
   for (int i = 0; i < MAXSIMULTANEAOUSGAMES; i++) {
-    if (games[i] == iDGame) {
+    if (games[i] == gameInfo) {
       games[i] = NULL;
+      return;
     }
   }
-  perror("Game not in pool");
-  exit(-8);
+  return;
 }
 
 void closeAll(connection_t *connection, gameStructure *gameInfo,
@@ -179,16 +194,16 @@ void closeAll(connection_t *connection, gameStructure *gameInfo,
 
   disconnectAllClients(gameInfo);
   removeGame(gameInfo);
-  closeLocal(connection, gameInfo, dataRecieved, dataToSend, client);
+  free(gameInfo);
+  gameInfo = NULL;
+  closeLocal(connection, dataRecieved, dataToSend, client);
 }
 
-void closeLocal(connection_t *connection, gameStructure *gameInfo,
-                dataSentReceived *dataRecieved, dataSentReceived *dataToSend,
-                clientStructure *client) {
+void closeLocal(connection_t *connection, dataSentReceived *dataRecieved,
+                dataSentReceived *dataToSend, clientStructure *client) {
   close(connection->sockfd);
   del(connection);
   free(connection);
-  free(gameInfo);
   free(dataRecieved);
   free(dataToSend);
   free(client);
@@ -200,7 +215,7 @@ void initDataToSend(dataSentReceived *dataToSend, clientStructure *client) {
     pthread_exit(0);
 
   dataToSend->currentBet = 0;
-  dataToSend->cooperate = false; // 1 collaborer     0 trahir
+  dataToSend->cooperate = false; // 1 collaborating     0 betraying
   dataToSend->totalMoney = client->money;
   dataToSend->gameEnded = false;
   dataToSend->nbRounds = NBROUNDS;
@@ -258,10 +273,10 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
     perror("Client non trouvé pour le calcul");
 
   if (!client1) {
-    pthread_exit(0);
+    exit(50);
   }
   if (!client2) {
-    pthread_exit(0);
+    exit(51);
   }
 
   // we wait for the clients to fill their data
@@ -371,18 +386,21 @@ void *threadServeur(void *ptr) {
 
     if (otherClientID != -1) {
       if ((client->idClient) > (otherClientID)) {
-        gameInfo = initGame((client->idClient), otherClientID);
+        initGame((client->idClient), otherClientID);
         break;
       }
     }
   }
+  gameInfo = client->gameP;
 
   if (gameInfo == NULL) {
     perror("Error: No game initialized\n");
     exit(69);
   }
 
-  printf("GINFO:%p, ID: %d\n", gameInfo, gameInfo->idGame);
+  // printf("GINFO:%p, ID:%d, J1:%d, J2:%d\n", gameInfo, gameInfo->idGame,
+  //        gameInfo->iDClient1, gameInfo->iDClient2);
+  // printf("JE suis:%d\n", client->idClient);
 
   initDataToSend(dataToSend, client);
   write(connection->sockfd, dataToSend, sizebufferData);
@@ -399,16 +417,20 @@ void *threadServeur(void *ptr) {
 #endif
 
   while (!hasGameEnded) {
-    printf("COUCOU C'EST LA FIN DE GAME EN ATTENTE\n");
 
     if ((len = read(connection->sockfd, dataRecieved, sizebufferData)) > 0) {
-
       hasGameEnded = computeAndSend(client, dataRecieved, gameInfo, dataToSend);
-
       write(connection->sockfd, dataToSend, sizebufferData);
     }
+    if (len == 0) {
+      printf("Client disconnected\n");
+      if (client->canFree) {
+        closeAll(connection, gameInfo, dataRecieved, dataToSend, client);
+      } else
+        closeLocal(connection, dataRecieved, dataToSend, client);
+    }
+    sleep(1);
   }
-
 #if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data Received:\n");
@@ -433,5 +455,5 @@ void *threadServeur(void *ptr) {
     saveOnfile(gameInfo);
     closeAll(connection, gameInfo, dataRecieved, dataToSend, client);
   } else
-    closeLocal(connection, gameInfo, dataRecieved, dataToSend, client);
+    closeLocal(connection, dataRecieved, dataToSend, client);
 }
