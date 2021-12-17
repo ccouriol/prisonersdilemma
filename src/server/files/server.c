@@ -150,6 +150,8 @@ void initGame(int client1ID, int client2ID) {
     game->c2NbCollab = 0;
     game->c2NbTreason = 0;
     game->nbrounds = NBROUNDS;
+    game->isCalcFinished = false;
+    game->hasGameEned = false;
 
     if ((client1ID) > (client2ID)) {
       tabClients[client1ID]->canFree = true;
@@ -267,15 +269,16 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
   clientStructure *client1 = tabClients[client->idClient];
   clientStructure *client2 = NULL;
 
-  if (client->idClient != gameInfo->iDClient2) {
+  if (!client1) {
+    exit(50);
+  }
+
+  if (gameInfo->iDClient1 != gameInfo->iDClient2) {
     // client->idClient != gameInfo->iDClient1)
     client2 = tabClients[gameInfo->iDClient2];
   } else
     perror("Client non trouvé pour le calcul");
 
-  if (!client1) {
-    exit(50);
-  }
   if (!client2) {
     exit(51);
   }
@@ -325,13 +328,12 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
 
 bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
                     gameStructure *gameInfo, dataSentReceived *dataToSend) {
-  bool hasGameEnded = false;
 
   fill(client, dataRecieved);
   // Only one of the clients should use this
   printf("FILLED\n");
   if ((gameInfo->iDClient1) > (gameInfo->iDClient2)) {
-    printf("1\n");
+
     if ((tabClients[gameInfo->iDClient1]->isFilled) &&
         (tabClients[gameInfo->iDClient2]->isFilled)) {
       // TODO/ RENTRE JAMAIS ICI, CORRIGER
@@ -340,17 +342,26 @@ bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
       gameInfo->nbrounds = gameInfo->nbrounds - 1;
       printf("\nNBROUNDS:%d\n", gameInfo->nbrounds);
       if ((gameInfo->nbrounds) == 0) {
-        hasGameEnded = true;
+        gameInfo->hasGameEned = true;
         dataToSend->gameEnded = true;
       }
+      gameInfo->isCalcFinished = true;
     }
   }
+
+  while (!(gameInfo->isCalcFinished)) {
+    sleep(1);
+  }
+
   dataToSend->totalMoney = client->money;
   dataToSend->cooperate = client->cooperate;
   dataToSend->currentBet = client->bet;
   client->isFilled = false;
+  gameInfo->isCalcFinished = false;
 
-  return hasGameEnded;
+  printf("GAME ENDED ? %d\n", gameInfo->hasGameEned);
+
+  return (gameInfo->hasGameEned);
 }
 
 void *threadServeur(void *ptr) {
@@ -440,7 +451,7 @@ void *threadServeur(void *ptr) {
       printf("TotalMoneyACALC: %lu \n", dataRecieved->totalMoney);
 
       hasGameEnded = computeAndSend(client, dataRecieved, gameInfo, dataToSend);
-      printf("Game Ended ? %d\n", dataRecieved->gameEnded);
+      printf("Game Ended au thread? %d\n", hasGameEnded);
       write(connection->sockfd, dataToSend, sizebufferData);
     }
     if (len == 0) {
@@ -452,14 +463,15 @@ void *threadServeur(void *ptr) {
       } else
         closeLocal(connection, dataRecieved, dataToSend, client);
     }
-    if (hasGameEnded) {
-      if (client->canFree) {
-        saveOnfile(gameInfo);
-        closeAll(connection, gameInfo, dataRecieved, dataToSend, client);
-      } else
-        closeLocal(connection, dataRecieved, dataToSend, client);
-    }
+
     sleep(1);
+  }
+  if (hasGameEnded) {
+    if (client->canFree) {
+      saveOnfile(gameInfo);
+      closeAll(connection, gameInfo, dataRecieved, dataToSend, client);
+    } else
+      closeLocal(connection, dataRecieved, dataToSend, client);
   }
 #if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
@@ -484,4 +496,5 @@ void *threadServeur(void *ptr) {
     closeAll(connection, gameInfo, dataRecieved, dataToSend, client);
   } else
     closeLocal(connection, dataRecieved, dataToSend, client);
+  pthread_exit(0);
 }
