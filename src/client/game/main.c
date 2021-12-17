@@ -23,24 +23,6 @@ s_clientData clientData;
 dataSentReceived *sending;
 dataSentReceived *receiving;
 
-void sendData() {
-
-  sending = malloc(sizeof(s_clientData));
-  sending->cooperate = clientData.cooperate;
-  sending->currentBet = clientData.currentBet;
-  sending->nbRounds = clientData.roundRemaining;
-  sending->gameStarted = clientData.gameOn;
-  sending->totalMoney = clientData.baseMoney;
-
-  printf("coop %d\n", sending->cooperate);
-  printf("bet %d\n", sending->currentBet);
-  printf("round %d\n", sending->nbRounds);
-  printf("game %d\n", sending->gameStarted);
-  printf("total %d\n", sending->totalMoney);
-
-  write(sockfd, sending, sizeof(dataSentReceived));
-}
-
 /*!
  * \fn void sendData()
  * \author GABETTE Cédric
@@ -53,19 +35,16 @@ void sendData() {
 
   puts("Sending data to server");
 
-  sending = malloc(sizeof(s_clientData));
+  sending = malloc(sizeof(dataSentReceived));
   sending->cooperate = clientData.cooperate;
   sending->currentBet = clientData.currentBet;
   sending->gameStarted = clientData.gameOn;
-  sending->totalMoney = clientData.baseMoney;
 
-  // For test purpose
-  // printf("SENDING----------------------------------------\n");
-  // printf("cooperate : %d\n", sending->cooperate);
-  // printf("currentBet : %d\n", sending->currentBet);
-  // printf("Is Game on : %d\n", sending->gameStarted);
-  // printf("Total base money : %d\n", sending->totalMoney);
-  // printf("END SENDING------------------------------------\n");
+  printf("SENDING----------------- -----------------------\n");
+  printf("cooperate : %d\n", sending->cooperate);
+  printf("currentBet : %d\n", sending->currentBet);
+  printf("Is Game on : %d\n", sending->gameStarted);
+  printf("END SENDING------------------------------------\n");
 
   write(sockfd, sending, sizeof(dataSentReceived));
 }
@@ -77,11 +56,9 @@ void receiveData() {
   // if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
   read(sockfd, receiving, sizeof(dataSentReceived));
 
-  clientData.baseMoney = receiving->totalMoney;
   clientData.gameOn = receiving->gameStarted;
 
   printf("RECEIVING----------------------------------------\n");
-  printf("Total money : %d\n", receiving->totalMoney);
   printf("Status game : %d\n", clientData.gameOn);
   printf("END RECEIVING------------------------------------\n");
   // }
@@ -103,7 +80,7 @@ void receiveData() {
  * \return
  */
 int initRound() {
-  int roundLeft = atoi(read_config("rounds"));
+  roundLeft = atoi(read_config("rounds"));
   return roundLeft;
 }
 
@@ -289,7 +266,6 @@ int main(int argc, char **argv) {
   do {
     if ((len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0)) {
       printf("Status gameStarted : %d\n", receiving->gameStarted);
-
       if (receiving->gameStarted == true) {
         // puts("Game on !");
         start_gtk_gui(&argc, &argv);

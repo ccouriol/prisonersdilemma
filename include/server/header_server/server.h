@@ -64,10 +64,8 @@ typedef struct {
 typedef struct dataSentReceived {
   unsigned long currentBet;
   bool cooperate; // 1 collaborer     0 trahir
-  unsigned long totalMoney;
   bool gameEnded;
   bool gameStarted;
-  int nbRounds;
 } dataSentReceived;
 
 void init_sockets_array();

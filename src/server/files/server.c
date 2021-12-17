@@ -218,9 +218,7 @@ void initDataToSend(dataSentReceived *dataToSend, clientStructure *client) {
 
   dataToSend->currentBet = 0;
   dataToSend->cooperate = false; // 1 collaborating     0 betraying
-  dataToSend->totalMoney = client->money;
   dataToSend->gameEnded = false;
-  dataToSend->nbRounds = NBROUNDS;
   dataToSend->gameStarted = true;
 }
 
@@ -258,7 +256,6 @@ void saveOnfile(gameStructure *gameInfo) {
 void fill(clientStructure *client, dataSentReceived *dataRecieved) {
 
   // Reception and filling of the client structure
-  client->money = dataRecieved->totalMoney;
   client->cooperate = dataRecieved->cooperate;
   client->bet = dataRecieved->currentBet;
   client->isFilled = true;
@@ -290,12 +287,10 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
 
   // On retire les sommes pariées des pactoles
   client1->money -= client1->bet;
-  client2->money -= client1->bet;
-  client1->money -= client1->bet;
   client2->money -= client2->bet;
 
   // If they both betray they gain half their bet
-  if (client1->cooperate == 0 && client2->cooperate == client1->cooperate) {
+  if (client1->cooperate == 0 && (client2->cooperate == client1->cooperate)) {
     client1->money += client1->bet / 2;
     client2->money += client1->bet / 2;
 
@@ -353,13 +348,10 @@ bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
     sleep(1);
   }
 
-  dataToSend->totalMoney = client->money;
   dataToSend->cooperate = client->cooperate;
   dataToSend->currentBet = client->bet;
   client->isFilled = false;
   gameInfo->isCalcFinished = false;
-
-  printf("GAME ENDED ? %d\n", gameInfo->hasGameEned);
 
   return (gameInfo->hasGameEned);
 }
@@ -422,10 +414,9 @@ void *threadServeur(void *ptr) {
   // printf("JE suis:%d\n", client->idClient);
 
   initDataToSend(dataToSend, client);
-  printf("Data sent:\n");
+  printf("Data sent INIT:\n");
   printf("CurrentBet: %lu \n", dataToSend->currentBet);
   printf("Choice: %d \n", dataToSend->cooperate);
-  printf("TotalMoney: %lu \n", dataToSend->totalMoney);
   printf("Game started ? %d\n", dataToSend->gameStarted);
 
   for (int i = 0; i < 2; i++)
@@ -442,17 +433,22 @@ void *threadServeur(void *ptr) {
 #endif
 
   while (!hasGameEnded) {
-    printf("ATENTTE\n");
+    printf("\n\nATENTTE\n\n");
+
     len = read(connection->sockfd, dataRecieved, sizebufferData);
 
+    printf("\nData Received:\n");
+    printf("CurrentBet: %lu \n", dataRecieved->currentBet);
+    printf("Choice: %d \n", dataRecieved->cooperate);
     if (len > 0) {
-      printf("CurrentBetACALC: %lu \n", dataRecieved->currentBet);
-      printf("ChoiceACALC: %d \n", dataRecieved->cooperate);
-      printf("TotalMoneyACALC: %lu \n", dataRecieved->totalMoney);
-
       hasGameEnded = computeAndSend(client, dataRecieved, gameInfo, dataToSend);
-      printf("Game Ended au thread? %d\n", hasGameEnded);
-      write(connection->sockfd, dataToSend, sizebufferData);
+      // printf("Game Ended au thread? %d\n", hasGameEnded);
+      printf("\n\nData sent:\n");
+      printf("CurrentBet: %lu \n", dataToSend->currentBet);
+      printf("Choice: %d \n", dataToSend->cooperate);
+      printf("Game Ended ? %d\n", dataToSend->gameEnded);
+      for (int i = 0; i < 2; i++)
+        write(connection->sockfd, dataToSend, sizebufferData);
     }
     if (len == 0) {
       printf("Client disconnected\n");
@@ -479,7 +475,6 @@ void *threadServeur(void *ptr) {
   printf("CurrentBet: %lu \n", dataRecieved->currentBet);
   printf("Choice: %d \n", dataRecieved->cooperate);
   printf("TotalMoney: %lu \n", dataRecieved->totalMoney);
-  printf("Game Ended ? %d\n", dataRecieved->gameEnded);
   printf("----------------------------------------------------------------\n");
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data sent:\n");
