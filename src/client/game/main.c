@@ -1,6 +1,6 @@
 /*!
  * \file main.c
- * \author GABETTE Cédric
+ * \author Cédric gabette
  * \version 0.1
  * \date 26/11/2021
  * \brief
@@ -12,33 +12,23 @@
 
 /*! Importation of librairies*/
 #include "../../../include/client/game/main.h"
+#include "../../../include/client/game/utils.h"
 
 GtkBuilder *builder = NULL;
-int time_remaining = 10;
+int time_remaining = 15;
 int len;
 int sockfd;
 int roundLeft;
 int i = 0;
+bool gamEnded = false;
 s_clientData clientData;
 dataSentReceived *sending;
-dataSentReceived *receiving;
 
-void sendData() {
+void closeAll() {
 
-  sending = malloc(sizeof(s_clientData));
-  sending->cooperate = clientData.cooperate;
-  sending->currentBet = clientData.currentBet;
-  sending->nbRounds = clientData.roundRemaining;
-  sending->gameStarted = clientData.gameOn;
-  sending->totalMoney = clientData.baseMoney;
-
-  printf("coop %d\n", sending->cooperate);
-  printf("bet %d\n", sending->currentBet);
-  printf("round %d\n", sending->nbRounds);
-  printf("game %d\n", sending->gameStarted);
-  printf("total %d\n", sending->totalMoney);
-
-  write(sockfd, sending, sizeof(dataSentReceived));
+  close(sockfd);
+  free(sending);
+  gtk_main_quit();
 }
 
 /*!
@@ -52,45 +42,33 @@ void sendData() {
 void sendData() {
 
   puts("Sending data to server");
-
-  sending = malloc(sizeof(s_clientData));
   sending->cooperate = clientData.cooperate;
   sending->currentBet = clientData.currentBet;
-  sending->gameStarted = clientData.gameOn;
-  sending->totalMoney = clientData.baseMoney;
-
-  // For test purpose
-  // printf("SENDING----------------------------------------\n");
-  // printf("cooperate : %d\n", sending->cooperate);
-  // printf("currentBet : %d\n", sending->currentBet);
-  // printf("Is Game on : %d\n", sending->gameStarted);
-  // printf("Total base money : %d\n", sending->totalMoney);
-  // printf("END SENDING------------------------------------\n");
+#if DEBUG
+  printf("SENDING----------------- -----------------------\n");
+  printf("cooperate : %d\n", sending->cooperate);
+  printf("currentBet : %ld\n", sending->currentBet);
+  printf("END SENDING------------------------------------\n");
+#endif
 
   write(sockfd, sending, sizeof(dataSentReceived));
 }
 
 void receiveData() {
 
-  sleep(1);
-  puts("waiting reading");
-  // if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
-  read(sockfd, receiving, sizeof(dataSentReceived));
+  clientData.gameOn = isGameStarted;
 
-  clientData.baseMoney = receiving->totalMoney;
-  clientData.gameOn = receiving->gameStarted;
-
+#if DEBUG
   printf("RECEIVING----------------------------------------\n");
-  printf("Total money : %d\n", receiving->totalMoney);
-  printf("Status game : %d\n", clientData.gameOn);
+  printf("Status game : %d\n", isGameStarted);
+  printf("FINISH ? %d\n", isGameFinished);
   printf("END RECEIVING------------------------------------\n");
-  // }
-
-  if (receiving->gameEnded == true) {
-    puts("Closing the thread");
-    close(sockfd);
+#endif
+  if (isGameFinished) {
+    puts("Closing the program");
+    closeAll();
+    return;
   }
-  sleep(1);
 }
 
 /*!
@@ -103,7 +81,7 @@ void receiveData() {
  * \return
  */
 int initRound() {
-  int roundLeft = atoi(read_config("rounds"));
+  roundLeft = atoi(read_config("rounds"));
   return roundLeft;
 }
 
@@ -137,13 +115,14 @@ int start_countdown() {
     // printf("Round left : %d\n", roundLeft);
 
     receiveData();
-    time_remaining = 12;
+    time_remaining = 15;
+
     // When we reach the end of the game
     if (roundLeft == 0) {
-      while (!receiving->gameEnded)
+      while (!isGameFinished) {
         sleep(1);
-      gtk_main_quit();
-      return 0;
+        receiveData();
+      }
     }
   }
 
@@ -222,7 +201,6 @@ void start_gtk_gui(int *ac, char ***av) {
 
   gtk_init(ac, av);
   // Default choice
-  // clientData.baseMoney = 2000;
   clientData.currentBet = 25;
   clientData.cooperate = true;
   builder = gtk_builder_new_from_file("./glade/Prisoner.glade");
@@ -232,7 +210,6 @@ void start_gtk_gui(int *ac, char ***av) {
   gtk_widget_show(win);
   if (time_remaining >= 0) {
     g_timeout_add(1000, (GSourceFunc)start_countdown, NULL);
-    start_countdown();
   }
 
   GtkLabel *betlabel =
@@ -258,20 +235,13 @@ int main(int argc, char **argv) {
 
   roundLeft = initRound();
   pthread_t thread;
-  receiving = malloc(sizeof(dataSentReceived));
-  receiving->gameStarted = false;
-  // puts("Client is alive");
-
-  // pthread_create(&thread, 0, threadProcess, &sockfd);
-  // pthread_detach(thread);
+  sending = malloc(sizeof(dataSentReceived));
 
   // REGEX display
   char *ip = read_config("ip");
   // printf("\nip= %s\n", ip);
   char *port = read_config("port");
   // printf("\nport= %s\n", port);
-  char *basemoney = read_config("basemoney");
-  // printf("\nport= %s\n", basemoney);
 
   // Verify if the server's IP is good
   int IP = verifyIP("test");
@@ -284,16 +254,24 @@ int main(int argc, char **argv) {
     return (-1);
   }
 
+  pthread_create(&thread, 0, threadProcess, &sockfd);
+  pthread_detach(thread);
+
   // Waiting for server to initialize a game instance
   do {
-    if ((len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0)) {
-      printf("Status gameStarted : %d\n", receiving->gameStarted);
+    // if ((len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0)) {
+    //   printf("Status gameStarted : %d\n", receiving->gameStarted);
+    //   if (receiving->gameStarted == true) {
+    //     // puts("Game on !");
+    //     start_gtk_gui(&argc, &argv);
+    //     break;
+    //   }
+    // }
 
-      if (receiving->gameStarted == true) {
-        // puts("Game on !");
-        start_gtk_gui(&argc, &argv);
-        break;
-      }
+    if (isGameStarted) {
+      // puts("Game on !");
+      start_gtk_gui(&argc, &argv);
+      break;
     }
   } while (1);
 }

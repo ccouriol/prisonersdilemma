@@ -18,6 +18,17 @@
 
 #define BUFFERSIZE 2048
 
+void closeAll();
+void sendData();
+void receiveData();
+int initRound();
+void on_window_main_destroy();
+int start_countdown();
+void on_bet_clicked(GtkWidget *widget);
+void on_action_clicked(GtkWidget *widget);
+void start_gtk_gui(int *ac, char ***av);
+int main(int argc, char **argv);
+
 void *threadProcess(void *ptr);
 int open_connection();
 
@@ -28,20 +39,9 @@ typedef struct s_clientData {
   bool gameOn;
 } s_clientData;
 
-// typedef struct dataSentReceived {
-//   unsigned long currentBet;
-//   unsigned long totalMoney;
-//   unsigned short round;
-//   int iDGame;
-//   bool cooperate;
-//   bool gameStarted;
-//   bool gameEnded;
-// } dataSentReceived;
-
 typedef struct dataSentReceived {
   unsigned long currentBet;
   bool cooperate; // 1 collaborer     0 trahir
-  unsigned long totalMoney;
   bool gameEnded;
   bool gameStarted;
 } dataSentReceived;

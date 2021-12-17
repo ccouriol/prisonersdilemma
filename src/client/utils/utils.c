@@ -14,6 +14,51 @@
 #include "../../../include/client/utils/utils.h"
 #include "../../../include/client/game/main.h"
 
+bool isGameStarted;
+bool isGameFinished;
+
+/*!
+ * \fn void *threadProcess(void *ptr)
+ * \author GABETTE Cédric, louis MORAND
+ * \version 0.1
+ * \date  26/11/2021
+ * \brief Thread for connection
+ * \remarks None
+ * \param ptr
+ */
+void *threadProcess(void *ptr) {
+  int len;
+  int sockfd = *((int *)ptr);
+  s_clientData clientData;
+  dataSentReceived *receiving;
+  receiving = malloc(sizeof(dataSentReceived));
+
+  do {
+
+    if ((len = read(sockfd, receiving, sizeof(dataSentReceived))) > 0) {
+      isGameStarted = receiving->gameStarted;
+      isGameFinished = receiving->gameEnded;
+    }
+
+    if (len <= 0) {
+      printf("Flux broken\n");
+      closeAll();
+      pthread_exit(0);
+    }
+#if DEBUG
+    printf("RECEIVING----------------------------------------\n");
+    printf("Status game : %d\n", isGameStarted);
+    printf("FINISH ? %d\n", isGameFinished);
+    printf("END RECEIVING------------------------------------\n");
+#endif
+
+    if (receiving->gameEnded) {
+      puts("Close");
+      pthread_exit(0);
+    }
+  } while (!receiving->gameEnded);
+}
+
 /*!
  * \fn int open_connection()
  * \author GABETTE Cédric
