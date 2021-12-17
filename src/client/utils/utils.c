@@ -33,23 +33,28 @@ void *threadProcess(void *ptr) {
   sending = malloc(sizeof(dataSentReceived));
   receiving = malloc(sizeof(dataSentReceived));
 
+  //Get the value from the server
   do {
 
     if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
       clientData.baseMoney = receiving->totalMoney;
       clientData.gameOn = receiving->gameStarted;
-      clientData.roundRemaining = receiving->nbRounds;
-      printf("BMONEY:%d\n", receiving->totalMoney);
-      printf("RON ?%d\n", clientData.gameOn);
-      printf("RROUNDS?:%d\n", clientData.roundRemaining);
-    }
-    if (receiving->gameEnded == true) {
-      puts("Close");
-      break;
+    
+      //printf("RECEIVING----------------------------------------\n");
+      //printf("Total money : %d\n", receiving->totalMoney);
+      //printf("Status game : %d\n", clientData.gameOn);
+      //printf("Round remaining: %d\n", clientData.roundRemaining);
+      //printf("END RECEIVING------------------------------------\n");
     }
 
+    if (receiving->gameEnded == true) {
+      puts("Closing the thread");
+      close(sockfd);
+      break;
+    }
+    //Client will be alive for 180s
     sleep(1);
-    printf("PROCESS %d\n", i);
+    // printf("PROCESS %d\n", i);
     i++;
   } while (i < 180);
 }
@@ -71,7 +76,6 @@ int open_connection() {
 
   // Create the socket.
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
   // Configure settings of the server address
   // Address family is Internet
   serverAddr.sin_family = AF_INET;
