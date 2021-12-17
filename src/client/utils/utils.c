@@ -1,5 +1,5 @@
 /*!
-* \file utils.c
+ * \file utils.c
  * \author GABETTE Cédric
  * \version 0.1
  * \date 26/11/2021
@@ -14,59 +14,60 @@
 #include "../../../include/client/utils/utils.h"
 #include "../../../include/client/game/main.h"
 
+bool isGameStarted;
+bool isGameFinished;
+
 /*!
-<<<<<<< HEAD
-* \fn void *threadProcess(void *ptr) 
- * \author GABETTE Cédric
+ * \fn void *threadProcess(void *ptr)
+ * \author GABETTE Cédric, louis MORAND
  * \version 0.1
  * \date  26/11/2021
  * \brief Thread for connection
  * \remarks None
-* \param ptr
-*/
+ * \param ptr
+ */
 void *threadProcess(void *ptr) {
-  int i = 0;
   int len;
   int sockfd = *((int *)ptr);
-  dataSentReceived *sending;
-  dataSentReceived *receiving;
   s_clientData clientData;
-  sending = malloc(sizeof(dataSentReceived));
+  dataSentReceived *receiving;
   receiving = malloc(sizeof(dataSentReceived));
 
   do {
 
-    if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
-      clientData.baseMoney = receiving->totalMoney;
-      clientData.gameOn = receiving->gameStarted;
-      clientData.roundRemaining = receiving->nbRounds;
-      printf("BMONEY:%d\n", receiving->totalMoney);
-      printf("RON ?%d\n", clientData.gameOn);
-      printf("RROUNDS?:%d\n", clientData.roundRemaining);
-    }
-    if (receiving->gameEnded == true) {
-      puts("Close");
-      break;
+    if ((len = read(sockfd, receiving, sizeof(dataSentReceived))) > 0) {
+      isGameStarted = receiving->gameStarted;
+      isGameFinished = receiving->gameEnded;
     }
 
-    sleep(1);
-    printf("PROCESS %d\n", i);
-    i++;
-  } while (i < 180);
+    if (len <= 0) {
+      printf("Flux broken\n");
+      closeAll();
+      pthread_exit(0);
+    }
+#if DEBUG
+    printf("RECEIVING----------------------------------------\n");
+    printf("Status game : %d\n", isGameStarted);
+    printf("FINISH ? %d\n", isGameFinished);
+    printf("END RECEIVING------------------------------------\n");
+#endif
+
+    if (receiving->gameEnded) {
+      puts("Close");
+      pthread_exit(0);
+    }
+  } while (!receiving->gameEnded);
 }
 
 /*!
-* \fn int open_connection() 
-=======
  * \fn int open_connection()
->>>>>>> 7910a59d7d956c2fce1d45f372aac932533c19b6
  * \author GABETTE Cédric
  * \version 0.1
  * \date  26/11/2021
  * \brief
  * \remarks None
  * \return
-*/
+ */
 int open_connection() {
   int sockfd;
 

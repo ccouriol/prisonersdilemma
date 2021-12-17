@@ -1,15 +1,3 @@
-/*!
-* \file main.c
-* \author Louis Morand
-* \version 0.1
-* \date 17/12/2021
-* \brief 
-* \remarks None
-* 
-* 
-* 
-*/
-
 
 /**
  * @file main.c
@@ -42,16 +30,16 @@
  */
 
 /*!
-* \fn int main(int argc, char **argv) 
-* \author Name <email@email.com>
-* \version 0.1
-* \date 17/12/2021
-* \brief Main function of the program
-* \remarks None
-* \param argc number of arguments given as inputs
-* \param *argv
-* \return 0 if all went good
-*/
+ * \fn int main(int argc, char **argv)
+ * \author Name <email@email.com>
+ * \version 0.1
+ * \date 17/12/2021
+ * \brief Main function of the program
+ * \remarks None
+ * \param argc number of arguments given as inputs
+ * \param *argv
+ * \return 0 if all went good
+ */
 int main(int argc, char **argv) {
   int sockfd = -1;
   int index = 1;
