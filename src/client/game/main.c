@@ -1,6 +1,6 @@
 /*!
- * \file main.c
- * \author GABETTE Cédric
+* \file main.c
+ * \author Cédric gabette
  * \version 0.1
  * \date 26/11/2021
  * \brief
@@ -22,6 +22,14 @@ s_clientData clientData;
 dataSentReceived *sending;
 dataSentReceived *receiving;
 
+/*!
+* \fn void sendData() 
+* \author GABETTE Cédric
+* \version 0.1
+* \date  17/12/2021
+* \brief 
+* \remarks None
+*/
 void sendData() {
 
   sending = malloc(sizeof(s_clientData));
@@ -41,27 +49,27 @@ void sendData() {
 }
 
 /*!
- * \fn void on_window_main_destroy()
+* \fn void on_window_main_destroy() 
  * \author Clément Couriol
  * \version 0.1
  * \date  17/11/2021
  * \brief Close window (invoked by the event anager)
  * \remarks None
- */
+*/
 void on_window_main_destroy() {
   puts("Quitting");
   gtk_main_quit();
 }
 
 /*!
- * \fn int start_countdown()
+* \fn int start_countdown() 
  * \author Clément Couriol && Cedric Gabette
  * \version 0.1
  * \date  17/11/2021
  * \brief
  * \remarks None
  * \return
- */
+*/
 int start_countdown() {
 
   if (time_remaining == 0) {
@@ -93,14 +101,14 @@ int start_countdown() {
 }
 
 /*!
- * \fn void on_bet_clicked(GtkWidget *widget)
+* \fn void on_bet_clicked(GtkWidget *widget) 
  * \author Clément Couriol
  * \version 0.1
  * \date  24/11/2021
  * \brief Function called when user click on a bet button
  * \remarks None
- * \param widget
- */
+* \param widget
+*/
 void on_bet_clicked(GtkWidget *widget) {
   char bet_text[5];
   GtkLabel *betlabel =
@@ -117,14 +125,14 @@ void on_bet_clicked(GtkWidget *widget) {
 }
 
 /*!
- * \fn void on_action_clicked(GtkWidget *widget)
+* \fn void on_action_clicked(GtkWidget *widget) 
  * \author Clément Couriol
  * \version 0.1
  * \date  24/11/2021
  * \brief Function called when user click on coop or betray button
  * \remarks None
- * \param widget
- */
+* \param widget
+*/
 void on_action_clicked(GtkWidget *widget) {
   gchar *value = (gchar *)gtk_button_get_label(widget);
   if (!(strcmp(value, "Coop"))) {
@@ -138,15 +146,15 @@ void on_action_clicked(GtkWidget *widget) {
 }
 
 /*!
- * \fn void start_gtk_gui(int *ac, char ***av)
+* \fn void start_gtk_gui(int *ac, char ***av) 
  * \author Clément Couriol
  * \version 0.1
  * \date  03/12/2021
  * \brief
  * \remarks None
- * \param ac
- * \param **av
- */
+* \param ac
+* \param **av
+*/
 void start_gtk_gui(int *ac, char ***av) {
   GtkWidget *win;
   char bet_text[5];
@@ -173,16 +181,16 @@ void start_gtk_gui(int *ac, char ***av) {
 }
 
 /*!
- * \fn int main(int argc, char **argv)
+* \fn int main(int argc, char **argv) 
  * \author Clément Couriol && Cedric Gabette
  * \version 0.1
  * \date 17/11/2021
  * \brief Main function of the program
  * \remarks None
- * \param argc
- * \param *argv
+* \param argc
+* \param *argv
  * \return 0 if all went good
- */
+*/
 
 int main(int argc, char **argv) {
 

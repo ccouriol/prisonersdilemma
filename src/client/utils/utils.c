@@ -1,5 +1,5 @@
 /*!
- * \file utils.c
+* \file utils.c
  * \author GABETTE Cédric
  * \version 0.1
  * \date 26/11/2021
@@ -15,14 +15,14 @@
 #include "../../../include/client/game/main.h"
 
 /*!
- * \fn void *threadProcess(void *ptr)
+* \fn void *threadProcess(void *ptr) 
  * \author GABETTE Cédric
  * \version 0.1
  * \date  26/11/2021
  * \brief Thread for connection
  * \remarks None
- * \param ptr
- */
+* \param ptr
+*/
 void *threadProcess(void *ptr) {
   int i = 0;
   int len;
@@ -55,14 +55,14 @@ void *threadProcess(void *ptr) {
 }
 
 /*!
- * \fn int open_connection()
+* \fn int open_connection() 
  * \author GABETTE Cédric
  * \version 0.1
  * \date  26/11/2021
  * \brief
  * \remarks None
  * \return
- */
+*/
 int open_connection() {
   int sockfd;
 
