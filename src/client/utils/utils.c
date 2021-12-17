@@ -15,51 +15,6 @@
 #include "../../../include/client/game/main.h"
 
 /*!
- * \fn void *threadProcess(void *ptr)
- * \author GABETTE Cédric
- * \version 0.1
- * \date  26/11/2021
- * \brief Thread for connection
- * \remarks None
- * \param ptr
- */
-void *threadProcess(void *ptr) {
-  int i = 0;
-  int len;
-  int sockfd = *((int *)ptr);
-  dataSentReceived *sending;
-  dataSentReceived *receiving;
-  s_clientData clientData;
-  sending = malloc(sizeof(dataSentReceived));
-  receiving = malloc(sizeof(dataSentReceived));
-
-  //Get the value from the server
-  do {
-
-    if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
-      clientData.baseMoney = receiving->totalMoney;
-      clientData.gameOn = receiving->gameStarted;
-    
-      //printf("RECEIVING----------------------------------------\n");
-      //printf("Total money : %d\n", receiving->totalMoney);
-      //printf("Status game : %d\n", clientData.gameOn);
-      //printf("Round remaining: %d\n", clientData.roundRemaining);
-      //printf("END RECEIVING------------------------------------\n");
-    }
-
-    if (receiving->gameEnded == true) {
-      puts("Closing the thread");
-      close(sockfd);
-      break;
-    }
-    //Client will be alive for 180s
-    sleep(1);
-    // printf("PROCESS %d\n", i);
-    i++;
-  } while (i < 180);
-}
-
-/*!
  * \fn int open_connection()
  * \author GABETTE Cédric
  * \version 0.1

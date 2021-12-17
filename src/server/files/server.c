@@ -386,7 +386,8 @@ void *threadServeur(void *ptr) {
   add(connection);
   createClient(client);
   printf("Welcome #%i\n", client->idClient);
-
+  dataToSend->totalMoney = 9999;
+  write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
   // Verification of the number of clients available, minus this client's ID
   // and creation of the game if there is enough clients
   while (!(client->isInGame)) {
@@ -411,38 +412,38 @@ void *threadServeur(void *ptr) {
   // printf("JE suis:%d\n", client->idClient);
 
   initDataToSend(dataToSend, client);
-  printf("Data sent:\n");
-  printf("CurrentBet: %lu \n", dataToSend->currentBet);
-  printf("Choice: %d \n", dataToSend->cooperate);
-  printf("TotalMoney: %lu \n", dataToSend->totalMoney);
-  printf("Game started ? %d\n", dataToSend->gameStarted);
+  // printf("Data sent:\n");
+  // printf("CurrentBet: %lu \n", dataToSend->currentBet);
+  // printf("Choice: %d \n", dataToSend->cooperate);
+  // printf("TotalMoney: %lu \n", dataToSend->totalMoney);
+  // printf("Game started ? %d\n", dataToSend->gameStarted);
 
   for (int i = 0; i < 2; i++)
     write(connection->sockfd, dataToSend, sizebufferData);
 
   // sendind the game ID to tell the client the game has started
-  dataToSend->currentBet = 0;
-  dataToSend->cooperate = false; // 1 collaborer     0 trahir
-  dataToSend->totalMoney = 1000;
-  // dataToSend->iDGame = gameInfo->idGame;//? Clang tidy me trouve les segfaults
-  dataToSend->gameEnded = false;
-  dataToSend->gameStarted = true;
-  for(int i=0; i < 100; i++) {
-  write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
-  }
-  puts("writen");
+  // dataToSend->currentBet = 0;
+  // dataToSend->cooperate = false; // 1 collaborer     0 trahir
+  // dataToSend->totalMoney = client->money;
+  // // dataToSend->iDGame = gameInfo->idGame;//? Clang tidy me trouve les segfaults
+  // dataToSend->gameEnded = false;
+  // dataToSend->gameStarted = true;
+  // for(int i=0; i < 100; i++) {
+  // write(connection->sockfd, dataToSend, sizeof(dataSentReceived));
+  // }
+  // puts("writen");
   // #if DEBUG
-  printf("DEBUG-----------------------------------------------------------\n");
-  printf("Data sent:\n");
-  printf("CurrentBet: %lu \n", dataToSend->currentBet);
-  printf("Choice: %d \n", dataToSend->cooperate);
-  printf("TotalMoney: %lu \n", dataToSend->totalMoney);
-  printf("Game Ended ? %d\n", dataToSend->gameEnded);
-  printf("----------------------------------------------------------------\n");
-#endif
+  // printf("DEBUG-----------------------------------------------------------\n");
+  // printf("Data sent:\n");
+  // printf("CurrentBet: %lu \n", dataToSend->currentBet);
+  // printf("Choice: %d \n", dataToSend->cooperate);
+  // printf("TotalMoney: %lu \n", dataToSend->totalMoney);
+  // printf("Game Ended ? %d\n", dataToSend->gameEnded);
+  // printf("----------------------------------------------------------------\n");
+// #endif
 
   while (!hasGameEnded) {
-    printf("ATENTTE\n");
+    printf("waiting...\n");
     len = read(connection->sockfd, dataRecieved, sizebufferData);
 
     if (len > 0) {
@@ -472,7 +473,7 @@ void *threadServeur(void *ptr) {
     }
     sleep(1);
   }
-#if DEBUG
+// #if DEBUG
   printf("DEBUG-----------------------------------------------------------\n");
   printf("Data Received:\n");
   printf("CurrentBet: %lu \n", dataRecieved->currentBet);
