@@ -120,13 +120,12 @@ int start_countdown() {
     // printf("Round left : %d\n", roundLeft);
 
     receiveData();
-    time_remaining = 10;
+    time_remaining = 12;
     //When we reach the end of the game
     if (roundLeft == 0) {
       while (!receiving->gameEnded)
         sleep(1);
       gtk_main_quit();
-      return 0;
     }
   }
 
