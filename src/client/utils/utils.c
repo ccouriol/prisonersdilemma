@@ -15,46 +15,6 @@
 #include "../../../include/client/game/main.h"
 
 /*!
- * \fn void *threadProcess(void *ptr)
- * \author GABETTE Cédric
- * \version 0.1
- * \date  26/11/2021
- * \brief Thread for connection
- * \remarks None
- * \param ptr
- */
-void *threadProcess(void *ptr) {
-  int i = 0;
-  int len;
-  int sockfd = *((int *)ptr);
-  dataSentReceived *sending;
-  dataSentReceived *receiving;
-  s_clientData clientData;
-  sending = malloc(sizeof(dataSentReceived));
-  receiving = malloc(sizeof(dataSentReceived));
-
-  do {
-
-    if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
-      clientData.baseMoney = receiving->totalMoney;
-      clientData.gameOn = receiving->gameStarted;
-      clientData.roundRemaining = receiving->nbRounds;
-      printf("BMONEY:%d\n", receiving->totalMoney);
-      printf("RON ?%d\n", clientData.gameOn);
-      printf("RROUNDS?:%d\n", clientData.roundRemaining);
-    }
-    if (receiving->gameEnded == true) {
-      puts("Close");
-      break;
-    }
-
-    sleep(1);
-    printf("PROCESS %d\n", i);
-    i++;
-  } while (i < 180);
-}
-
-/*!
  * \fn int open_connection()
  * \author GABETTE Cédric
  * \version 0.1
@@ -71,7 +31,6 @@ int open_connection() {
 
   // Create the socket.
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
   // Configure settings of the server address
   // Address family is Internet
   serverAddr.sin_family = AF_INET;

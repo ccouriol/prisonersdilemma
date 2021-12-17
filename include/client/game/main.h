@@ -24,7 +24,6 @@ int open_connection();
 typedef struct s_clientData {
   unsigned long currentBet;
   unsigned long baseMoney;
-  unsigned long roundRemaining;
   bool cooperate;
   bool gameOn;
 } s_clientData;
@@ -45,7 +44,6 @@ typedef struct dataSentReceived {
   unsigned long totalMoney;
   bool gameEnded;
   bool gameStarted;
-  int nbRounds;
 } dataSentReceived;
 
 #endif // MAIN_H
