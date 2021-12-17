@@ -15,6 +15,7 @@
 #include "../../../include/client/game/main.h"
 
 /*!
+<<<<<<< HEAD
 * \fn void *threadProcess(void *ptr) 
  * \author GABETTE Cédric
  * \version 0.1
@@ -56,6 +57,9 @@ void *threadProcess(void *ptr) {
 
 /*!
 * \fn int open_connection() 
+=======
+ * \fn int open_connection()
+>>>>>>> 7910a59d7d956c2fce1d45f372aac932533c19b6
  * \author GABETTE Cédric
  * \version 0.1
  * \date  26/11/2021
@@ -71,7 +75,6 @@ int open_connection() {
 
   // Create the socket.
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
   // Configure settings of the server address
   // Address family is Internet
   serverAddr.sin_family = AF_INET;
