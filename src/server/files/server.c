@@ -8,7 +8,6 @@ int NBROUNDS;
 // TODO: système de rounds sur le serveur, dans la structure game
 // faire une lecture depuis fichier de config, et mettre dans variable globale
 // puis mettre variable globale dans variable locale de la struct
-
 void init_sockets_array() {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     connections[i] = NULL;
@@ -422,15 +421,15 @@ void *threadServeur(void *ptr) {
   for (int i = 0; i < 2; i++)
     write(connection->sockfd, dataToSend, sizebufferData);
 
-#if DEBUG
-  printf("DEBUG-----------------------------------------------------------\n");
-  printf("Data sent:\n");
-  printf("CurrentBet: %lu \n", dataToSend->currentBet);
-  printf("Choice: %d \n", dataToSend->cooperate);
-  printf("TotalMoney: %lu \n", dataToSend->totalMoney);
-  printf("Game Ended ? %d\n", dataToSend->gameEnded);
-  printf("----------------------------------------------------------------\n");
-#endif
+  // #if DEBUG
+  //   printf("DEBUG-----------------------------------------------------------\n");
+  //   printf("Data sent:\n");
+  //   printf("CurrentBet: %lu \n", dataToSend->currentBet);
+  //   printf("Choice: %d \n", dataToSend->cooperate);
+  //   printf("TotalMoney: %lu \n", dataToSend->totalMoney);
+  //   printf("Game Ended ? %d\n", dataToSend->gameEnded);
+  //   printf("----------------------------------------------------------------\n");
+  // #endif
 
   while (!hasGameEnded) {
     printf("\n\nATENTTE\n\n");

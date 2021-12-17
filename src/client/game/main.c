@@ -1,6 +1,6 @@
 /*!
  * \file main.c
- * \author GABETTE Cédric
+ * \author Cédric gabette
  * \version 0.1
  * \date 26/11/2021
  * \brief
