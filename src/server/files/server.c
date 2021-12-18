@@ -301,7 +301,7 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
   client2->money -= client2->bet;
 
   // If they both betray they gain half their bet
-  if (client1->cooperate == 0 && (client2->cooperate == client1->cooperate)) {
+  if (client1->cooperate == 0 && client2->cooperate == 1) {
     client1->money += client1->bet / 2;
     client2->money += client1->bet / 2;
 

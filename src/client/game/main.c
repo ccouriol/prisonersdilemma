@@ -1,5 +1,5 @@
 /*!
- * \file main.c
+* \file main.c
  * \author Cédric gabette
  * \version 0.1
  * \date 26/11/2021
@@ -24,6 +24,14 @@ bool gamEnded = false;
 s_clientData clientData;
 dataSentReceived *sending;
 
+/*!
+* \fn void closeAll() 
+* \author GABETTE Cédric
+* \version 0.1
+* \date  18/12/2021
+* \brief Regroups all functions for closing the program
+* \remarks None
+*/
 void closeAll() {
 
   close(sockfd);
@@ -32,13 +40,13 @@ void closeAll() {
 }
 
 /*!
- * \fn void sendData()
+* \fn void sendData() 
  * \author GABETTE Cédric
  * \version 0.1
  * \date  17/12/2021
  * \brief Send data to the server
  * \remarks None
- */
+*/
 void sendData() {
 
   puts("Sending data to server");
@@ -54,6 +62,14 @@ void sendData() {
   write(sockfd, sending, sizeof(dataSentReceived));
 }
 
+/*!
+* \fn void receiveData() 
+* \author GABETTE Cédric
+* \version 0.1
+* \date  18/12/2021
+* \brief Listen the server for start game action
+* \remarks None
+*/
 void receiveData() {
 
   clientData.gameOn = isGameStarted;
@@ -72,41 +88,41 @@ void receiveData() {
 }
 
 /*!
- * \fn int initRound()
+* \fn int initRound() 
  * \author GABETTE Cédric
  * \version 0.1
  * \date  17/12/2021
  * \brief Get the number of rounds from the config file
  * \remarks None
  * \return
- */
+*/
 int initRound() {
   roundLeft = atoi(read_config("rounds"));
   return roundLeft;
 }
 
 /*!
- * \fn void on_window_main_destroy()
+* \fn void on_window_main_destroy() 
  * \author Clément Couriol
  * \version 0.1
  * \date  17/11/2021
  * \brief Close window (invoked by the event anager)
  * \remarks None
- */
+*/
 void on_window_main_destroy() {
   puts("Quitting");
   gtk_main_quit();
 }
 
 /*!
- * \fn int start_countdown()
+* \fn int start_countdown() 
  * \author Clément Couriol && Cedric Gabette
  * \version 0.1
  * \date  17/11/2021
  * \brief Countdown for round
  * \remarks This function have a while behaviour
  * \return
- */
+*/
 
 int start_countdown() {
   if (time_remaining == 0) {
@@ -129,7 +145,6 @@ int start_countdown() {
   if (time_remaining > 0) {
     time_remaining--;
     char timer_text[5];
-    // puts("Timer running, time");
     // printf("Timer running time %d\n", time_remaining);
     // For displaying on the GTK
     GtkLabel *timelabel =
@@ -141,14 +156,14 @@ int start_countdown() {
 }
 
 /*!
- * \fn void on_bet_clicked(GtkWidget *widget)
+* \fn void on_bet_clicked(GtkWidget *widget) 
  * \author Clément Couriol
  * \version 0.1
  * \date  24/11/2021
  * \brief Function called when user click on a bet button
  * \remarks None
- * \param widget
- */
+* \param widget
+*/
 void on_bet_clicked(GtkWidget *widget) {
   char bet_text[5];
   GtkLabel *betlabel =
@@ -165,14 +180,14 @@ void on_bet_clicked(GtkWidget *widget) {
 }
 
 /*!
- * \fn void on_action_clicked(GtkWidget *widget)
+* \fn void on_action_clicked(GtkWidget *widget) 
  * \author Clément Couriol
  * \version 0.1
  * \date  24/11/2021
  * \brief Function called when user click on coop or betray button
  * \remarks None
- * \param widget
- */
+* \param widget
+*/
 void on_action_clicked(GtkWidget *widget) {
   gchar *value = (gchar *)gtk_button_get_label(widget);
   if (!(strcmp(value, "Coop"))) {
@@ -186,15 +201,15 @@ void on_action_clicked(GtkWidget *widget) {
 }
 
 /*!
- * \fn void start_gtk_gui(int *ac, char ***av)
+* \fn void start_gtk_gui(int *ac, char ***av) 
  * \author Clément Couriol
  * \version 0.1
  * \date  03/12/2021
  * \brief
  * \remarks None
- * \param ac
- * \param **av
- */
+* \param ac
+* \param **av
+*/
 void start_gtk_gui(int *ac, char ***av) {
   GtkWidget *win;
   char bet_text[5];
@@ -220,16 +235,16 @@ void start_gtk_gui(int *ac, char ***av) {
 }
 
 /*!
- * \fn int main(int argc, char **argv)
+* \fn int main(int argc, char **argv) 
  * \author Clément Couriol && Cedric Gabette
  * \version 0.1
  * \date 17/11/2021
  * \brief Main function of the program
  * \remarks None
- * \param argc
- * \param *argv
+* \param argc
+* \param *argv
  * \return 0 if all went good
- */
+*/
 
 int main(int argc, char **argv) {
 
@@ -237,7 +252,7 @@ int main(int argc, char **argv) {
   pthread_t thread;
   sending = malloc(sizeof(dataSentReceived));
 
-  // REGEX display
+  // REGEX read the Ip and verify is IP is valid
   char *ip = read_config("ip");
   // printf("\nip= %s\n", ip);
   char *port = read_config("port");
