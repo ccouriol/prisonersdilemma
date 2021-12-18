@@ -39,6 +39,11 @@ int create_server_socket() {
   struct sockaddr_in address;
   int port = 7799;
 
+  char *addr = read_config("ip");
+  printf("IP:%s\n", addr);
+  int port2 = atoi(read_config("port"));
+  printf("port:%d\n", port2);
+
   /* create socket */
   sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sockfd <= 0) {
@@ -52,8 +57,10 @@ int create_server_socket() {
   // address.sin_addr.s_addr = INADDR_ANY;
   // ou 0.0.0.0
   // Sinon  127.0.0.1
+  // address.sin_addr.s_addr = inet_addr("0.0.0.0");
+  // address.sin_port = htons(port);
   address.sin_addr.s_addr = inet_addr("0.0.0.0");
-  address.sin_port = htons(port);
+  address.sin_port = htons(port2);
 
   /* prevent the 60 secs timeout */
   int reuse = 1;
@@ -271,7 +278,7 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
     // client->idClient != gameInfo->iDClient1)
     client2 = tabClients[gameInfo->iDClient2];
   } else
-    perror("Client non trouvé pour le calcul");
+    perror("Client not found for calculation");
 
   if (!client2) {
     exit(51);

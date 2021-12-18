@@ -260,15 +260,6 @@ int main(int argc, char **argv) {
 
   // Waiting for server to initialize a game instance
   do {
-    // if ((len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0)) {
-    //   printf("Status gameStarted : %d\n", receiving->gameStarted);
-    //   if (receiving->gameStarted == true) {
-    //     // puts("Game on !");
-    //     start_gtk_gui(&argc, &argv);
-    //     break;
-    //   }
-    // }
-
     if (isGameStarted) {
       // puts("Game on !");
       start_gtk_gui(&argc, &argv);
