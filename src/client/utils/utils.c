@@ -3,7 +3,7 @@
  * \author GABETTE Cédric
  * \version 0.1
  * \date 26/11/2021
- * \brief
+ * \brief Configuration of thread
  * \remarks None
  *
  *
@@ -64,7 +64,7 @@ void *threadProcess(void *ptr) {
  * \author GABETTE Cédric
  * \version 0.1
  * \date  26/11/2021
- * \brief
+ * \brief Establish connection with server through a socket
  * \remarks None
  * \return
  */
