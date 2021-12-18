@@ -16,8 +16,6 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#define BUFFERSIZE 2048
-
 void closeAll();
 void sendData();
 void receiveData();
