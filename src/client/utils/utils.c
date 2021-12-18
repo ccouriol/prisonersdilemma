@@ -14,9 +14,12 @@
 #include "../../../include/client/utils/utils.h"
 #include "../../../include/client/game/main.h"
 
+bool isGameStarted;
+bool isGameFinished;
+
 /*!
  * \fn void *threadProcess(void *ptr)
- * \author GABETTE Cédric
+ * \author GABETTE Cédric, louis MORAND
  * \version 0.1
  * \date  26/11/2021
  * \brief Thread for connection
@@ -24,34 +27,36 @@
  * \param ptr
  */
 void *threadProcess(void *ptr) {
-  int i = 0;
   int len;
   int sockfd = *((int *)ptr);
-  dataSentReceived *sending;
-  dataSentReceived *receiving;
   s_clientData clientData;
-  sending = malloc(sizeof(dataSentReceived));
+  dataSentReceived *receiving;
   receiving = malloc(sizeof(dataSentReceived));
 
   do {
 
-    if (len = read(sockfd, receiving, sizeof(dataSentReceived)) > 0) {
-      clientData.baseMoney = receiving->totalMoney;
-      clientData.gameOn = receiving->gameStarted;
-      clientData.roundRemaining = receiving->nbRounds;
-      printf("BMONEY:%d\n", receiving->totalMoney);
-      printf("RON ?%d\n", clientData.gameOn);
-      printf("RROUNDS?:%d\n", clientData.roundRemaining);
-    }
-    if (receiving->gameEnded == true) {
-      puts("Close");
-      break;
+    if ((len = read(sockfd, receiving, sizeof(dataSentReceived))) > 0) {
+      isGameStarted = receiving->gameStarted;
+      isGameFinished = receiving->gameEnded;
     }
 
-    sleep(1);
-    printf("PROCESS %d\n", i);
-    i++;
-  } while (i < 180);
+    if (len <= 0) {
+      printf("Flux broken\n");
+      closeAll();
+      pthread_exit(0);
+    }
+#if DEBUG
+    printf("RECEIVING----------------------------------------\n");
+    printf("Status game : %d\n", isGameStarted);
+    printf("FINISH ? %d\n", isGameFinished);
+    printf("END RECEIVING------------------------------------\n");
+#endif
+
+    if (receiving->gameEnded) {
+      puts("Close");
+      pthread_exit(0);
+    }
+  } while (!receiving->gameEnded);
 }
 
 /*!
@@ -71,7 +76,6 @@ int open_connection() {
 
   // Create the socket.
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
   // Configure settings of the server address
   // Address family is Internet
   serverAddr.sin_family = AF_INET;

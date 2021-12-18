@@ -37,6 +37,8 @@ typedef struct gameStructure {
   int iDClient1;
   int iDClient2;
   int nbrounds;
+  bool isCalcFinished;
+  bool hasGameEned;
 } gameStructure;
 
 // client envoie choix, mise et pactole
@@ -62,10 +64,8 @@ typedef struct {
 typedef struct dataSentReceived {
   unsigned long currentBet;
   bool cooperate; // 1 collaborer     0 trahir
-  unsigned long totalMoney;
   bool gameEnded;
   bool gameStarted;
-  int nbRounds;
 } dataSentReceived;
 
 void init_sockets_array();
