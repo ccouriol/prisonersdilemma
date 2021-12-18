@@ -222,15 +222,20 @@ void initDataToSend(dataSentReceived *dataToSend, clientStructure *client) {
   dataToSend->gameStarted = true;
 }
 
-// TODO: upgrade for a better filename
+// TODO: data written are incorrect values shoudn't be 0
 void saveOnfile(gameStructure *gameInfo) {
-  printf("GEN FICHIER\n");
+  puts("GEN FICHIER");
 
   FILE *fich;
   int nbTotalTreason = gameInfo->c1NbTreason + gameInfo->c2NbTreason;
   int nbTotalCollab = gameInfo->c1NbCollab + gameInfo->c2NbCollab;
 
-  fich = fopen("../save_games", "a");
+  time_t t = time(NULL);
+  struct tm tm = *localtime(&t);
+  char date[25];
+  strftime(date, sizeof(date), "%d-%m-%Y-%T", &tm);
+
+  fich = fopen(date, "w+");
   if (fich == NULL) {
     perror("error opening file \n");
     exit(EXIT_FAILURE);
@@ -238,19 +243,20 @@ void saveOnfile(gameStructure *gameInfo) {
 
   fseek(fich, 0, SEEK_END);
 
-  fprintf(fich, "Game number: %d", gameInfo->idGame);
-  fprintf(fich, "Number of collaboration for player 1: %d",
+  fprintf(fich, "Game number: %d\n", gameInfo->idGame);
+  fprintf(fich, "Number of collaboration for player 1: %d\n",
           gameInfo->c1NbCollab);
-  fprintf(fich, "Number of treason for player 1: %d", gameInfo->c1NbTreason);
-  fprintf(fich, "Number of collaboration for player 2: %d",
+  fprintf(fich, "Number of treason for player 1: %d\n", gameInfo->c1NbTreason);
+  fprintf(fich, "Number of collaboration for player 2: %d\n",
           gameInfo->c2NbCollab);
-  fprintf(fich, "Number of treason for player 2: %d", gameInfo->c2NbTreason);
+  fprintf(fich, "Number of treason for player 2: %d\n", gameInfo->c2NbTreason);
 
-  fprintf(fich, "Total number of treason: %d", nbTotalTreason);
-  fprintf(fich, "Total number of collaborations: %d", nbTotalCollab);
+  fprintf(fich, "Total number of treason: %d\n", nbTotalTreason);
+  fprintf(fich, "Total number of collaborations: %d\n", nbTotalCollab);
 
   fputs("\0", fich);
   fclose(fich);
+  puts("GEN FICHIER FINISHED");
 }
 
 void fill(clientStructure *client, dataSentReceived *dataRecieved) {
