@@ -30,7 +30,7 @@ void del(connection_t *connection) {
       return;
     }
   }
-  perror("Connection not in pool ");
+  perror("Connection not in pool");
   exit(60);
 }
 
@@ -93,7 +93,7 @@ void createClient(clientStructure *client) {
       return;
     }
   }
-  perror("Too much simultaneous clients\n");
+  perror("Too much simultaneous clients");
   exit(15);
 }
 
@@ -105,7 +105,7 @@ void removeClient(int IDClient) {
       return;
     }
   }
-  perror("Client not in pool\n");
+  perror("Client not in pool");
   exit(50);
 }
 
@@ -175,7 +175,7 @@ void initGame(int client1ID, int client2ID) {
       }
     }
   } else {
-    perror("No game initialized\n");
+    perror("No game initialized");
     exit(63);
   }
 }
@@ -231,6 +231,10 @@ void initDataToSend(dataSentReceived *dataToSend, clientStructure *client) {
 void saveOnfile(gameStructure *gameInfo) {
   puts("GEN FICHIER");
 
+  if (!gameInfo) {
+    printf("Erreur recption gameInfo");
+  }
+
   FILE *fich;
   int nbTotalTreason = gameInfo->c1NbTreason + gameInfo->c2NbTreason;
   int nbTotalCollab = gameInfo->c1NbCollab + gameInfo->c2NbCollab;
@@ -242,13 +246,13 @@ void saveOnfile(gameStructure *gameInfo) {
 
   fich = fopen(date, "w+");
   if (fich == NULL) {
-    perror("error opening file \n");
+    perror("error opening file");
     exit(EXIT_FAILURE);
   }
 
   // fseek(fich, 0, SEEK_END);
 
-  fprintf(fich, "Game number: %d\n", gameInfo->idGame);
+  fprintf(fich, "Game number: %d\n", (gameInfo->idGame) + 1);
   fprintf(fich, "Number of collaboration for player 1: %d\n",
           gameInfo->c1NbCollab);
   fprintf(fich, "Number of treason for player 1: %d\n", gameInfo->c1NbTreason);
@@ -414,7 +418,7 @@ void *threadServeur(void *ptr) {
   gameInfo = client->gameP;
 
   if (gameInfo == NULL) {
-    perror("Error: No game initialized\n");
+    perror("Error: No game initialized");
     exit(69);
   }
 
@@ -459,7 +463,7 @@ void *threadServeur(void *ptr) {
 #endif
     }
     if (len == 0) {
-      perror("Client disconnected\n");
+      perror("Client disconnected");
       if (client->canFree) {
         if (hasGameEnded)
           saveOnfile(gameInfo);

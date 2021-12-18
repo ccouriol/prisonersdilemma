@@ -11,7 +11,7 @@
  */
 
 /*! Importation of librairies*/
-#include "../../../include/client/utils/utils.h"
+#include "../../../include/client/game/utils.h"
 #include "../../../include/client/game/main.h"
 
 bool isGameStarted;
