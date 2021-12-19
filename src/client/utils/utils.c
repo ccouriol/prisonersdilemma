@@ -72,12 +72,14 @@ int open_connection() {
   int sockfd;
 
   struct sockaddr_in serverAddr;
-  uint16_t port = 7799;
+  // uint16_t port = 7799;
+  char *addr;
+  int port;
 
-  char *addr = read_config("ip");
-  printf("IP:%s\n", addr);
-  int port2 = atoi(read_config("port"));
-  printf("port:%d\n", port2);
+  addr = read_config("ip");
+  port = atoi(read_config("port"));
+  // printf("IP:%s\n", addr);
+  // printf("port:%d\n", port);
 
   // Create the socket.
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -86,9 +88,9 @@ int open_connection() {
   serverAddr.sin_family = AF_INET;
   // Set port number, using htons function
   // serverAddr.sin_port = htons(port);
-  serverAddr.sin_port = htons(port2);
+  serverAddr.sin_port = htons(port);
   // Set IP address to localhost
-  serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+  serverAddr.sin_addr.s_addr = inet_addr(addr);
 
   memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
 

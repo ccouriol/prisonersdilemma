@@ -37,12 +37,14 @@ void del(connection_t *connection) {
 int create_server_socket() {
   int sockfd = -1;
   struct sockaddr_in address;
-  int port = 7799;
+  // int port = 7799;
+  char *addr;
+  int port;
 
-  char *addr = read_config("ip");
-  printf("IP:%s\n", addr);
-  int port2 = atoi(read_config("port"));
-  printf("port:%d\n", port2);
+  addr = read_config("ip");
+  port = atoi(read_config("port"));
+  // printf("IP:%s\n", addr);
+  // printf("port:%d\n", port);
 
   /* create socket */
   sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -59,8 +61,8 @@ int create_server_socket() {
   // Sinon  127.0.0.1
   // address.sin_addr.s_addr = inet_addr("0.0.0.0");
   // address.sin_port = htons(port);
-  address.sin_addr.s_addr = inet_addr("0.0.0.0");
-  address.sin_port = htons(port2);
+  address.sin_addr.s_addr = inet_addr(addr);
+  address.sin_port = htons(port);
 
   /* prevent the 60 secs timeout */
   int reuse = 1;
