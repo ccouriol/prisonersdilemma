@@ -1,3 +1,16 @@
+/*!
+ * \file server.c
+ * \author Louis Morand
+ * \version 0.1
+ * \date 20/12/2021
+ * \brief Main function of the server
+ * \remarks None
+ *
+ *
+ *
+ */
+
+/*! Importation of librairies*/
 #include "../../../include/server/header_server/server.h"
 
 connection_t *connections[MAXSIMULTANEOUSCLIENTS];
@@ -6,12 +19,29 @@ clientStructure *tabClients[MAXSIMULTANEOUSCLIENTS];
 int NBROUNDS;
 
 // TODO: faire la lecture de port ?
+/*!
+ * \fn void init_sockets_array()
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief init the array of sockets
+ * \remarks None
+ */
 void init_sockets_array() {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     connections[i] = NULL;
   }
 }
 
+/*!
+ * \fn void add(connection_t *connection)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief add a connection to the array of sockets
+ * \remarks None
+ * \param connection
+ */
 void add(connection_t *connection) {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (connections[i] == NULL) {
@@ -23,6 +53,15 @@ void add(connection_t *connection) {
   exit(-5);
 }
 
+/*!
+ * \fn void del(connection_t *connection)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief delete a connection from the array of sockets
+ * \remarks None
+ * \param connection
+ */
 void del(connection_t *connection) {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (connections[i] == connection) {
@@ -34,6 +73,15 @@ void del(connection_t *connection) {
   exit(60);
 }
 
+/*!
+ * \fn int create_server_socket()
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief create a server socket
+ * \remarks None
+ * \return
+ */
 int create_server_socket() {
   int sockfd = -1;
   struct sockaddr_in address;
@@ -79,10 +127,36 @@ int create_server_socket() {
   return sockfd;
 }
 
+/*!
+ * \fn void initNBRounds()
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief init the number of rounds
+ * \remarks None
+ */
 void initNBRounds() { NBROUNDS = atoi(read_config("rounds")); }
 
+/*!
+ * \fn int initBaseMoney()
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief init the base money
+ * \remarks None
+ * \return
+ */
 int initBaseMoney() { return atoi(read_config("basemoney")); }
 
+/*!
+ * \fn void createClient(clientStructure *client)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief add a client to the array of clients
+ * \remarks None
+ * \param client
+ */
 void createClient(clientStructure *client) {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (tabClients[i] == NULL) {
@@ -99,8 +173,16 @@ void createClient(clientStructure *client) {
   exit(15);
 }
 
+/*!
+ * \fn void removeClient(int IDClient)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief remove a client from the array of clients
+ * \remarks None
+ * \param IDClient
+ */
 void removeClient(int IDClient) {
-
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (i == IDClient) {
       tabClients[i] = NULL;
@@ -111,6 +193,15 @@ void removeClient(int IDClient) {
   exit(50);
 }
 
+/*!
+ * \fn void disconnectAllClients(gameStructure *game)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief disconnect all clients from the game
+ * \remarks None
+ * \param game
+ */
 void disconnectAllClients(gameStructure *game) {
   if (game == NULL) {
     return;
@@ -119,13 +210,17 @@ void disconnectAllClients(gameStructure *game) {
   removeClient(game->iDClient2);
 }
 
-/**
- * @brief Search for an available client
- *
- * @return int the position of an available client
+/*!
+ * \fn int verifyNbClients(int clientID)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief Search for an available client
+ * \remarks None
+ * \param clientID
+ * \return int the position of an available client
  */
 int verifyNbClients(int clientID) {
-
   int ret = -1;
 
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
@@ -141,8 +236,17 @@ int verifyNbClients(int clientID) {
   return ret;
 }
 
+/*!
+ * \fn void initGame(int client1ID, int client2ID)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief init a game structure
+ * \remarks None
+ * \param client1ID
+ * \param client2ID
+ */
 void initGame(int client1ID, int client2ID) {
-
   gameStructure *game = NULL;
 
   game = malloc(sizeof(gameStructure));
@@ -182,6 +286,15 @@ void initGame(int client1ID, int client2ID) {
   }
 }
 
+/*!
+ * \fn void removeGame(gameStructure *gameInfo)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief remove a game from the array of games
+ * \remarks None
+ * \param gameInfo
+ */
 void removeGame(gameStructure *gameInfo) {
   if (gameInfo == NULL) {
     perror("Game not in pool");
@@ -196,6 +309,21 @@ void removeGame(gameStructure *gameInfo) {
   return;
 }
 
+/*!
+ * \fn void closeAll(connection_t *connection, gameStructure *gameInfo,
+ * dataSentReceived *dataRecieved, dataSentReceived *dataToSend, clientStructure
+ * *client)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief close all the connections and free the memory
+ * \remarks None
+ * \param connection
+ * \param gameInfo
+ * \param dataRecieved
+ * \param dataToSend
+ * \param client
+ */
 void closeAll(connection_t *connection, gameStructure *gameInfo,
               dataSentReceived *dataRecieved, dataSentReceived *dataToSend,
               clientStructure *client) {
@@ -207,6 +335,19 @@ void closeAll(connection_t *connection, gameStructure *gameInfo,
   closeLocal(connection, dataRecieved, dataToSend, client);
 }
 
+/*!
+ * \fn void closeLocal(connection_t *connection, dataSentReceived *dataRecieved,
+ * dataSentReceived *dataToSend, clientStructure *client)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief close the local connection
+ * \remarks None
+ * \param connection
+ * \param dataRecieved
+ * \param dataToSend
+ * \param client
+ */
 void closeLocal(connection_t *connection, dataSentReceived *dataRecieved,
                 dataSentReceived *dataToSend, clientStructure *client) {
   close(connection->sockfd);
@@ -219,6 +360,17 @@ void closeLocal(connection_t *connection, dataSentReceived *dataRecieved,
   pthread_exit(0);
 }
 
+/*!
+ * \fn void initDataToSend(dataSentReceived *dataToSend, clientStructure
+ * *client)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief init the data structure to send to the client
+ * \remarks None
+ * \param dataToSend
+ * \param client
+ */
 void initDataToSend(dataSentReceived *dataToSend, clientStructure *client) {
   if (!dataToSend)
     pthread_exit(0);
@@ -230,6 +382,15 @@ void initDataToSend(dataSentReceived *dataToSend, clientStructure *client) {
 }
 
 // TODO: data written are incorrect values shoudn't be 0
+/*!
+ * \fn void saveOnfile(gameStructure *gameInfo)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief save the game data on a file
+ * \remarks None
+ * \param gameInfo
+ */
 void saveOnfile(gameStructure *gameInfo) {
   puts("GEN FICHIER");
 
@@ -270,16 +431,33 @@ void saveOnfile(gameStructure *gameInfo) {
   puts("GEN FICHIER FINISHED");
 }
 
+/*!
+ * \fn void fill(clientStructure *client, dataSentReceived *dataRecieved)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief fill the dataRecieved structure with the data received from the client
+ * \remarks None
+ * \param client
+ * \param dataRecieved
+ */
 void fill(clientStructure *client, dataSentReceived *dataRecieved) {
-
-  // Reception and filling of the client structure
   client->cooperate = dataRecieved->cooperate;
   client->bet = dataRecieved->currentBet;
   client->isFilled = true;
 }
 
+/*!
+ * \fn void profitsCalculation(clientStructure *client, gameStructure *gameInfo)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief calculate the profits of the game
+ * \remarks None
+ * \param client
+ * \param gameInfo
+ */
 void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
-
   clientStructure *client1 = tabClients[client->idClient];
   clientStructure *client2 = NULL;
 
@@ -338,6 +516,20 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
   }
 }
 
+/*!
+ * \fn bool computeAndSend(clientStructure *client, dataSentReceived
+ * *dataRecieved, gameStructure *gameInfo, dataSentReceived *dataToSend)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief compute the data to send to the client
+ * \remarks None
+ * \param client
+ * \param dataRecieved
+ * \param gameInfo
+ * \param dataToSend
+ * \return
+ */
 bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
                     gameStructure *gameInfo, dataSentReceived *dataToSend) {
 
@@ -371,6 +563,15 @@ bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
   return (gameInfo->hasGameEned);
 }
 
+/*!
+ * \fn void *threadServeur(void *ptr)
+ * \author Louis Morand
+ * \version 0.1
+ * \date  20/12/2021
+ * \brief thread that will be used to serve the clients
+ * \remarks None
+ * \param ptr
+ */
 void *threadServeur(void *ptr) {
 
   // creation of the buffer to receive and send data
