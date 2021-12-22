@@ -6,7 +6,7 @@
 
 /*
  * File:   srvcxnmanager.h
- * Author: aurelio
+ * Author: Louis Morand, Mathis Francfort
  *
  */
 

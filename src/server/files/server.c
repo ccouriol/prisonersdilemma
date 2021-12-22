@@ -198,8 +198,8 @@ void removeClient(int IDClient) {
  * \author Louis Morand
  * \version 0.1
  * \date  20/12/2021
- * \brief disconnect all clients from the game
- * \remarks None
+ * \brief Remove all clients from the game array
+ * \remarks Should only be called once by game
  * \param game
  */
 void disconnectAllClients(gameStructure *game) {
@@ -232,7 +232,7 @@ int verifyNbClients(int clientID) {
       return ret; // return the index of an available client
     }
   }
-  printf("Client pas dans table\n");
+  printf("Client not in pool\n");
   return ret;
 }
 
@@ -241,8 +241,8 @@ int verifyNbClients(int clientID) {
  * \author Louis Morand
  * \version 0.1
  * \date  20/12/2021
- * \brief init a game structure
- * \remarks None
+ * \brief init a game structure, if there is at least 2 clients connected
+ * \remarks Set the canFree boolean, which determines which client can call specific functions to close games, write files, and call disconnectAll
  * \param client1ID
  * \param client2ID
  */
@@ -317,7 +317,7 @@ void removeGame(gameStructure *gameInfo) {
  * \version 0.1
  * \date  20/12/2021
  * \brief close all the connections and free the memory
- * \remarks None
+ * \remarks Should be used by one of the two clients only
  * \param connection
  * \param gameInfo
  * \param dataRecieved
@@ -342,7 +342,7 @@ void closeAll(connection_t *connection, gameStructure *gameInfo,
  * \version 0.1
  * \date  20/12/2021
  * \brief close the local connection
- * \remarks None
+ * \remarks Should be used by the client not calling closeAll
  * \param connection
  * \param dataRecieved
  * \param dataToSend
@@ -366,7 +366,7 @@ void closeLocal(connection_t *connection, dataSentReceived *dataRecieved,
  * \author Louis Morand
  * \version 0.1
  * \date  20/12/2021
- * \brief init the data structure to send to the client
+ * \brief init the data structure to send to the client, and tell them the game has started
  * \remarks None
  * \param dataToSend
  * \param client
@@ -388,7 +388,7 @@ void initDataToSend(dataSentReceived *dataToSend, clientStructure *client) {
  * \version 0.1
  * \date  20/12/2021
  * \brief save the game data on a file
- * \remarks None
+ * \remarks The file name is in the format "day-month-year-time"
  * \param gameInfo
  */
 void saveOnfile(gameStructure *gameInfo) {
@@ -428,13 +428,13 @@ void saveOnfile(gameStructure *gameInfo) {
 
   fputs("\0", fich);
   fclose(fich);
-  puts("GEN FICHIER FINISHED");
+  puts("File generation finished\n");
 }
 
 /*!
  * \fn void fill(clientStructure *client, dataSentReceived *dataRecieved)
  * \author Louis Morand
- * \version 0.1
+ * \version 0.8
  * \date  20/12/2021
  * \brief fill the dataRecieved structure with the data received from the client
  * \remarks None
@@ -450,7 +450,7 @@ void fill(clientStructure *client, dataSentReceived *dataRecieved) {
 /*!
  * \fn void profitsCalculation(clientStructure *client, gameStructure *gameInfo)
  * \author Louis Morand
- * \version 0.1
+ * \version 0.2
  * \date  20/12/2021
  * \brief calculate the profits of the game
  * \remarks None
@@ -519,8 +519,8 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
 /*!
  * \fn bool computeAndSend(clientStructure *client, dataSentReceived
  * *dataRecieved, gameStructure *gameInfo, dataSentReceived *dataToSend)
- * \author Louis Morand
- * \version 0.1
+ * \author Louis Morand, Mathis Francfort
+ * \version 0.6
  * \date  20/12/2021
  * \brief compute the data to send to the client
  * \remarks None
@@ -528,7 +528,7 @@ void profitsCalculation(clientStructure *client, gameStructure *gameInfo) {
  * \param dataRecieved
  * \param gameInfo
  * \param dataToSend
- * \return
+ * \return true is the game is finished
  */
 bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
                     gameStructure *gameInfo, dataSentReceived *dataToSend) {
@@ -539,8 +539,6 @@ bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
 
     if ((tabClients[gameInfo->iDClient1]->isFilled) &&
         (tabClients[gameInfo->iDClient2]->isFilled)) {
-      // TODO/ RENTRE JAMAIS ICI, CORRIGER
-
       profitsCalculation(client, gameInfo);
       gameInfo->nbrounds = gameInfo->nbrounds - 1;
       if ((gameInfo->nbrounds) == 0) {
@@ -566,9 +564,9 @@ bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
 /*!
  * \fn void *threadServeur(void *ptr)
  * \author Louis Morand
- * \version 0.1
+ * \version 0.4
  * \date  20/12/2021
- * \brief thread that will be used to serve the clients
+ * \brief thread that will be used to serve the clients. Can react to a client's connection, end games, and compute the data sent.
  * \remarks None
  * \param ptr
  */
