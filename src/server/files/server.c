@@ -94,6 +94,12 @@ int create_server_socket() {
   // printf("IP:%s\n", addr);
   // printf("port:%d\n", port);
 
+  if (verifyIP(addr)) {
+    perror("There is something wrong with the IP, check it's validity in the "
+           "config file");
+    exit(EXIT_FAILURE);
+  }
+
   /* create socket */
   sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sockfd <= 0) {
@@ -232,7 +238,7 @@ int verifyNbClients(int clientID) {
       return ret; // return the index of an available client
     }
   }
-  printf("Client not in pool\n");
+  puts("Client not in pool");
   return ret;
 }
 
@@ -242,7 +248,8 @@ int verifyNbClients(int clientID) {
  * \version 0.1
  * \date  20/12/2021
  * \brief init a game structure, if there is at least 2 clients connected
- * \remarks Set the canFree boolean, which determines which client can call specific functions to close games, write files, and call disconnectAll
+ * \remarks Set the canFree boolean, which determines which client can call
+ * specific functions to close games, write files, and call disconnectAll
  * \param client1ID
  * \param client2ID
  */
@@ -356,22 +363,21 @@ void closeLocal(connection_t *connection, dataSentReceived *dataRecieved,
   free(dataRecieved);
   free(dataToSend);
   free(client);
-  printf("fin du thread\n");
+  puts("Fin du thread");
   pthread_exit(0);
 }
 
 /*!
- * \fn void initDataToSend(dataSentReceived *dataToSend, clientStructure
- * *client)
+ * \fn void initDataToSend(dataSentReceived *dataToSend)
  * \author Louis Morand
  * \version 0.1
  * \date  20/12/2021
- * \brief init the data structure to send to the client, and tell them the game has started
+ * \brief init the data structure to send to the client, and tell them the game
+ * has started
  * \remarks None
  * \param dataToSend
- * \param client
  */
-void initDataToSend(dataSentReceived *dataToSend, clientStructure *client) {
+void initDataToSend(dataSentReceived *dataToSend) {
   if (!dataToSend)
     pthread_exit(0);
 
@@ -395,7 +401,7 @@ void saveOnfile(gameStructure *gameInfo) {
   puts("GEN FICHIER");
 
   if (!gameInfo) {
-    printf("Erreur recption gameInfo");
+    puts("Erreur recption gameInfo");
   }
 
   FILE *fich;
@@ -405,7 +411,7 @@ void saveOnfile(gameStructure *gameInfo) {
   time_t t = time(NULL);
   struct tm tm = *localtime(&t);
   char date[25];
-  strftime(date, sizeof(date), "%d-%m-%Y-%T", &tm);
+  strftime(date, sizeof(date), "%d-%m-%Y-%T.log", &tm);
 
   fich = fopen(date, "w+");
   if (fich == NULL) {
@@ -428,7 +434,7 @@ void saveOnfile(gameStructure *gameInfo) {
 
   fputs("\0", fich);
   fclose(fich);
-  puts("File generation finished\n");
+  puts("File generation finished");
 }
 
 /*!
@@ -566,7 +572,8 @@ bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
  * \author Louis Morand
  * \version 0.4
  * \date  20/12/2021
- * \brief thread that will be used to serve the clients. Can react to a client's connection, end games, and compute the data sent.
+ * \brief thread that will be used to serve the clients. Can react to a client's
+ * connection, end games, and compute the data sent.
  * \remarks None
  * \param ptr
  */
@@ -589,7 +596,7 @@ void *threadServeur(void *ptr) {
   if (!ptr)
     pthread_exit(0);
   connection = (connection_t *)ptr;
-  printf("New incoming connection \n");
+  puts("New incoming connection");
 
   if (!client)
     pthread_exit(0);
@@ -623,7 +630,7 @@ void *threadServeur(void *ptr) {
     exit(69);
   }
 
-  initDataToSend(dataToSend, client);
+  initDataToSend(dataToSend);
   write(connection->sockfd, dataToSend, sizebufferData);
 
 #if DEBUG

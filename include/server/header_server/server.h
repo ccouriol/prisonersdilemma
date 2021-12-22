@@ -88,7 +88,7 @@ void closeAll(connection_t *connection, gameStructure *gameInfo,
               clientStructure *client);
 void closeLocal(connection_t *connection, dataSentReceived *dataRecieved,
                 dataSentReceived *dataToSend, clientStructure *client);
-void initDataToSend(dataSentReceived *dataToSend, clientStructure *client);
+void initDataToSend(dataSentReceived *dataToSend);
 void saveOnfile(gameStructure *gameInfo);
 void *threadServeur(void *ptr);
 void fill(clientStructure *client, dataSentReceived *dataRecieved);
