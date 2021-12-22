@@ -41,7 +41,7 @@ void *threadProcess(void *ptr) {
     }
 
     if (len <= 0) {
-      printf("Flux broken\n");
+      puts("Flux broken");
       closeAll();
       pthread_exit(0);
     }

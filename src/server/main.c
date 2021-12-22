@@ -31,7 +31,7 @@
 
 /*!
  * \fn int main(int argc, char **argv)
- * \author Name <email@email.com>
+ * \author Louis Morand
  * \version 0.1
  * \date 17/12/2021
  * \brief Main function of the program
