@@ -1,0 +1,5 @@
+//config.txt
+ip = "127.0.0.1";
+port = "1234";
+basemoney = "500";
+rounds = "3";

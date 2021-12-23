@@ -105,7 +105,10 @@ pre-commit run
 - [ ] Explain context
 - [x] Build depedencies for config files
 - [x] implement valgrind
-- [ ] change makefile to build a server executable and client executable
+- [x] change makefile to build a server executable and client executable
+- [ ] gui rounds
+- [x] link bet label text with button
+- [ ] ? loader while game is searching
 
 ## Subject
 
