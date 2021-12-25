@@ -20,11 +20,17 @@ make runclient
 make server
 make runserver
 
+## To compile client & server
+make all
+
 ### To clean the client
 make cleanclient
 
 ### To clean the server
 make cleanserver
+
+### To clean the client & server
+make cleanall
 
 ### To compile and build the documentation
 make doc
