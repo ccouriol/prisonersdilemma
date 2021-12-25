@@ -1,5 +1,39 @@
 # Development docs
 
+## Makefile
+
+```bash
+git clone https://github.com/ccouriol/prisonersdilemma.git
+cd prisonersdilemma/
+
+### To compile and run the client :
+make client
+make runclient
+
+### To compile and run the server :
+make server
+make runserver
+
+## To compile client & server
+make all
+
+### To clean the client
+make cleanclient
+
+### To clean the server
+make cleanserver
+
+### To clean the client & server
+make cleanall
+
+### To compile and build the documentation
+make doc
+./docs/html/index.html
+
+### To clean the docs
+make clean
+```
+
 ## Dev requirements
 
 ### Package requirements
@@ -64,3 +98,53 @@ pre-commit run
 
 1. `sudo valgrind --tool=memcheck --leak-check=summary --leak-resolution=high --show-reachable=yes ./output/main 2> valgrind.log`
 1. `cppcheck --error-exitcode=1 --enable=all --suppress=unmatchedSuppression . 2> cppcheck.log`
+
+## Structures
+
+```c
+typedef struct gameStructure {
+  int idGame;
+  int c1NbTreason; // client 1 total betray
+  int c1NbCollab; // client 1 total coop
+  int c2NbTreason; // client 2 total betray
+  int c2NbCollab; // client 2 total coop
+  int iDClient1;
+  int iDClient2;
+  int nbrounds; // number of rounds
+  bool isCalcFinished;
+  bool hasGameEned; // 1 game finished    0 game not finished
+} gameStructure;
+```
+
+```c
+// client envoie choix, mise et pactole
+// serveur envoie Nouveau Pactole
+typedef struct clientStructure {
+  bool isInGame; // 1 in game    0 not in game
+  int idClient;
+  bool cooperate; // 1 coop    0 betray
+  unsigned long bet;
+  unsigned long money;
+  bool isFilled; // 1 filled    0 not filled
+  gameStructure *gameP;
+  bool canFree;
+} clientStructure;
+```
+
+```c
+typedef struct {
+  int sockfd;
+  struct sockaddr address;
+  int addr_len;
+  int index;
+} connection_t;
+```
+
+```c
+typedef struct dataSentReceived {
+  unsigned long currentBet;
+  bool cooperate; // 1 coop    0 betray
+  bool gameEnded; // 1 ended   0 not ended
+  bool gameStarted; // 1 started   0 not started
+} dataSentReceived;
+```
