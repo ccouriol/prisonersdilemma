@@ -12,7 +12,7 @@
 
 /*! Importation of librairies*/
 #include "../../../include/client/game/utils.h"
-#include "../../../include/client/game/main.h"
+#include "../../../include/client/game/game.h"
 
 bool isGameStarted;
 bool isGameFinished;
@@ -26,21 +26,25 @@ bool isGameFinished;
  * \remarks None
  * \param ptr
  */
-void *threadProcess(void *ptr) {
+void *threadProcess(void *ptr)
+{
   int len;
   int sockfd = *((int *)ptr);
   s_clientData clientData;
   dataSentReceived *receiving;
   receiving = malloc(sizeof(dataSentReceived));
 
-  do {
+  do
+  {
 
-    if ((len = read(sockfd, receiving, sizeof(dataSentReceived))) > 0) {
+    if ((len = read(sockfd, receiving, sizeof(dataSentReceived))) > 0)
+    {
       isGameStarted = receiving->gameStarted;
       isGameFinished = receiving->gameEnded;
     }
 
-    if (len <= 0) {
+    if (len <= 0)
+    {
       puts("Flux broken");
       closeAll();
       pthread_exit(0);
@@ -52,7 +56,8 @@ void *threadProcess(void *ptr) {
     printf("END RECEIVING------------------------------------\n");
 #endif
 
-    if (receiving->gameEnded) {
+    if (receiving->gameEnded)
+    {
       puts("Close");
       pthread_exit(0);
     }
@@ -68,7 +73,8 @@ void *threadProcess(void *ptr) {
  * \remarks None
  * \return
  */
-int open_connection() {
+int open_connection()
+{
   int sockfd;
 
   struct sockaddr_in serverAddr;
@@ -96,7 +102,8 @@ int open_connection() {
 
   // Connect the socket to the server using the address
   if (connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) !=
-      0) {
+      0)
+  {
     puts("Fail to connect to server");
     exit(-1);
   };

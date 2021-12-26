@@ -1,5 +1,5 @@
 /*!
- * \file main.c
+ * \file game.c
  * \author Cédric gabette
  * \version 0.1
  * \date 26/11/2021
@@ -11,7 +11,7 @@
  */
 
 /*! Importation of librairies*/
-#include "../../../include/client/game/main.h"
+#include "../../../include/client/game/game.h"
 #include "../../../include/client/game/utils.h"
 
 GtkBuilder *builder = NULL;
@@ -32,7 +32,8 @@ dataSentReceived *sending;
  * \brief Regroups all functions for closing the program
  * \remarks None
  */
-void closeAll() {
+void closeAll()
+{
 
   close(sockfd);
   free(sending);
@@ -47,7 +48,8 @@ void closeAll() {
  * \brief Send data to the server
  * \remarks None
  */
-void sendData() {
+void sendData()
+{
 
   puts("Sending data to server");
   sending->cooperate = clientData.cooperate;
@@ -70,7 +72,8 @@ void sendData() {
  * \brief Listen the server for start game action
  * \remarks None
  */
-void receiveData() {
+void receiveData()
+{
 
   clientData.gameOn = isGameStarted;
 
@@ -80,7 +83,8 @@ void receiveData() {
   printf("FINISH ? %d\n", isGameFinished);
   printf("END RECEIVING------------------------------------\n");
 #endif
-  if (isGameFinished) {
+  if (isGameFinished)
+  {
     puts("Closing the program");
     closeAll();
     return;
@@ -96,7 +100,8 @@ void receiveData() {
  * \remarks None
  * \return
  */
-int initRound() {
+int initRound()
+{
   roundLeft = atoi(read_config("rounds"));
   return roundLeft;
 }
@@ -109,7 +114,8 @@ int initRound() {
  * \brief Close window (invoked by the event anager)
  * \remarks None
  */
-void on_window_main_destroy() {
+void on_window_main_destroy()
+{
   puts("Quitting");
   gtk_main_quit();
 }
@@ -124,8 +130,10 @@ void on_window_main_destroy() {
  * \return
  */
 
-int start_countdown() {
-  if (time_remaining == 0) {
+int start_countdown()
+{
+  if (time_remaining == 0)
+  {
     sendData();
     roundLeft--;
     // printf("Round left : %d\n", roundLeft);
@@ -134,15 +142,18 @@ int start_countdown() {
     time_remaining = 10;
 
     // When we reach the end of the game
-    if (roundLeft == 0) {
-      while (!isGameFinished) {
+    if (roundLeft == 0)
+    {
+      while (!isGameFinished)
+      {
         sleep(1);
         receiveData();
       }
     }
   }
 
-  if (time_remaining > 0) {
+  if (time_remaining > 0)
+  {
     time_remaining--;
     char timer_text[5];
     // printf("Timer running time %d\n", time_remaining);
@@ -164,7 +175,8 @@ int start_countdown() {
  * \remarks None
  * \param widget
  */
-void on_bet_clicked(GtkWidget *widget) {
+void on_bet_clicked(GtkWidget *widget)
+{
   char bet_text[5];
   GtkLabel *betlabel =
       GTK_LABEL(gtk_builder_get_object(builder, "current_bet_label"));
@@ -188,12 +200,16 @@ void on_bet_clicked(GtkWidget *widget) {
  * \remarks None
  * \param widget
  */
-void on_action_clicked(GtkWidget *widget) {
+void on_action_clicked(GtkWidget *widget)
+{
   gchar *value = (gchar *)gtk_button_get_label(widget);
-  if (!(strcmp(value, "Coop"))) {
+  if (!(strcmp(value, "Coop")))
+  {
     // puts("Coop clicked");
     clientData.cooperate = true;
-  } else {
+  }
+  else
+  {
     // puts("Betray clicked");
     clientData.cooperate = false;
   }
@@ -210,7 +226,8 @@ void on_action_clicked(GtkWidget *widget) {
  * \param ac
  * \param **av
  */
-void start_gtk_gui(int *ac, char ***av) {
+void start_gtk_gui(int *ac, char ***av)
+{
   GtkWidget *win;
   char bet_text[5];
 
@@ -223,7 +240,8 @@ void start_gtk_gui(int *ac, char ***av) {
 
   gtk_builder_connect_signals(builder, NULL);
   gtk_widget_show(win);
-  if (time_remaining >= 0) {
+  if (time_remaining >= 0)
+  {
     g_timeout_add(1000, (GSourceFunc)start_countdown, NULL);
   }
 
@@ -246,7 +264,8 @@ void start_gtk_gui(int *ac, char ***av) {
  * \return 0 if all went good
  */
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   roundLeft = initRound();
   pthread_t thread;
   sending = malloc(sizeof(dataSentReceived));
@@ -256,9 +275,12 @@ int main(int argc, char **argv) {
   char *port = read_config("port");
   // printf("\nport= %s\n", port);
 
-  if (!(verifyIP(ip))) {
+  if (!(verifyIP(ip)))
+  {
     sockfd = open_connection();
-  } else {
+  }
+  else
+  {
     perror("There is something wrong with the IP, check it's validity in the "
            "config file");
     return (EXIT_FAILURE);
@@ -268,8 +290,10 @@ int main(int argc, char **argv) {
   pthread_detach(thread);
 
   // Waiting for server to initialize a game instance
-  do {
-    if (isGameStarted) {
+  do
+  {
+    if (isGameStarted)
+    {
       // puts("Game on !");
       start_gtk_gui(&argc, &argv);
       break;
