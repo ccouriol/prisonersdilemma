@@ -12,18 +12,29 @@ apt install build-essential doxygen graphviz libgtk-3-dev
 git clone https://github.com/ccouriol/prisonersdilemma.git
 cd prisonersdilemma/
 
-### To compile and run the program :
-make run
+This program requires at least one running server and two running clients for a test run.
 
-### To compile the program and run manually :
-make && ./output/main
+### To compile all the program :
+make all
+
+### To compile the client's part :
+make client
+
+### To compile the server's part :
+make server
+
+### To compile the program and run the server :
+make all && make runserver
+
+### To compile the program and run the client :
+make all && make runclient
 
 ### To compile and build the documentation
 make doc
 ./docs/html/index.html
 
 ### To clean the docs and program
-make clean
+make cleanall
 ```
 
 ## Mockup
@@ -81,7 +92,7 @@ pre-commit run
 5. commitizen commits, and stage clang format modification
 6. `git push`
 7. `git fetch --all`
-8. `git pull --all` (ou checkout sur main git pull git merge la branche)
+8. `git pull --all` (or checkout sur main git pull git merge la branche)
 
 ## Prisoner dilemna context
 
