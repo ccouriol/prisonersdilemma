@@ -8,6 +8,8 @@ apt install build-essential doxygen graphviz libgtk-3-dev
 
 ## Build & run
 
+#### ❗ You have to run one server and 2 clients, for now 3 clients and more aren't supported ❗
+
 ```bash
 git clone https://github.com/ccouriol/prisonersdilemma.git
 cd prisonersdilemma/
