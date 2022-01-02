@@ -46,8 +46,9 @@ int main(int argc, char **argv) {
   connection_t *connection;
   pthread_t thread;
 
-  // init array
+  // init arrays
   init_sockets_array();
+  init_clients_array();
   // create socket
   sockfd = create_server_socket();
 

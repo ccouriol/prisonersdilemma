@@ -12,6 +12,18 @@ void init_sockets_array() {
   }
 }
 
+void init_clients_array() {
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    tabClients[i] = NULL;
+  }
+}
+
+void printtabclients() {
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    printf("t:%d\n", tabClients[i]);
+  }
+}
+
 void add(connection_t *connection) {
   for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
     if (connections[i] == NULL) {
@@ -134,10 +146,8 @@ int verifyNbClients(int clientID) {
           (tabClients[i]->isInGame == false)) {
         ret = i;
       }
-      return ret; // return the index of an available client
     }
   }
-  printf("Client pas dans table\n");
   return ret;
 }
 
