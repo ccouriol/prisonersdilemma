@@ -95,5 +95,6 @@ void fill(clientStructure *client, dataSentReceived *dataRecieved);
 bool computeAndSend(clientStructure *client, dataSentReceived *dataRecieved,
                     gameStructure *gameInfo, dataSentReceived *dataToSend);
 void profitsCalculation(clientStructure *client, gameStructure *gameInfo);
+void init_clients_array();
 
 #endif /* SERVER_H */

@@ -33,6 +33,12 @@ void init_sockets_array() {
   }
 }
 
+void init_clients_array() {
+  for (int i = 0; i < MAXSIMULTANEOUSCLIENTS; i++) {
+    tabClients[i] = NULL;
+  }
+}
+
 /*!
  * \fn void add(connection_t *connection)
  * \author Louis Morand
@@ -235,10 +241,8 @@ int verifyNbClients(int clientID) {
           (tabClients[i]->isInGame == false)) {
         ret = i;
       }
-      return ret; // return the index of an available client
     }
   }
-  puts("Client not in pool");
   return ret;
 }
 
